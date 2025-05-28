@@ -44,26 +44,31 @@ renovate:
   renovate:
     config: |
       {
-        "autodiscover": true,
-        "onboardingConfig": {
-          "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-          "extends": [
-            "config:base",
-            ":dependencyDashboard"
-          ],
-          "postUpdateOptions": [
-            "helmUpdateSubChartArchives"
-          ]
-        },
-        "packageRules": [
-         {
-            "matchDatasources": [ 'pypi' ],
-            "matchUpdateTypes": [ 'minor', 'patch' ],
-            "groupName": '{{manager}} dependencies non-major',
-            "groupSlug": 'dependencies-non-major',
-            "additionalBranchPrefix": '{{manager}}-'
-        }
-        ]
+         "autodiscover": true,
+         "onboardingConfig": {
+           "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+           "extends": [
+             "config:recommended",
+             ":dependencyDashboard"
+           ],
+           "postUpdateOptions": [
+             "helmUpdateSubChartArchives"
+           ]
+         },
+         "packageRules": [
+           {
+             "matchDatasources": [
+               "pypi"
+             ],
+             "matchUpdateTypes": [
+               "minor",
+               "patch"
+             ],
+             "groupName": "{{manager}} dependencies non-major",
+             "groupSlug": "dependencies-non-major",
+             "additionalBranchPrefix": "{{manager}}-"
+           }
+         ]
       }
   envFrom:
   - secretRef:
