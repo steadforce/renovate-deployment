@@ -38,3 +38,50 @@ image, which is nearby the required version.
   -a batch/v1/CronJob \
   -f values-local.yaml --output-dir _local .
 ```
+
+## Render resource locally
+
+### local
+
+```shell
+ helm template \
+  --include-crds \
+  --output-dir _local/local \
+  --release-name renovate \
+  --skip-tests \
+  -a external-secrets.io/v1beta1/ExternalSecret \
+  -f values-subchart-overrides.yaml \
+  -f values-local.yaml \
+  -n renovate \
+  .
+```
+
+### development
+
+```shell
+ helm template \
+  --include-crds \
+  --output-dir _local/dev \
+  --release-name renovate \
+  --skip-tests \
+  -a external-secrets.io/v1beta1/ExternalSecret \
+  -f values-subchart-overrides.yaml \
+  -f values-development.yaml \
+  -n renovate \
+  .
+```
+
+### production
+
+```shell
+ helm template \
+  --include-crds \
+  --output-dir _local/prod \
+  --release-name renovate \
+  --skip-tests \
+  -a external-secrets.io/v1beta1/ExternalSecret \
+  -f values-subchart-overrides.yaml \
+  -f values-production.yaml \
+  -n renovate \
+  .
+```

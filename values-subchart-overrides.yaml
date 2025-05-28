@@ -1,10 +1,4 @@
 renovate:
- # sub chart values
-  image:
-    registry: harbor.k8s01.steadforce.com
-    repository: steadops/renovate
-    tag: "36.81"
-
   cronjob:
     activeDeadlineSeconds: 1200
     concurrencyPolicy: Forbid
@@ -47,19 +41,20 @@ renovate:
      cpu: 600m
      memory: 512Mi
 
-  env:
-    GITHUB_COM_TOKEN: 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
-
   renovate:
     config: |
       {
-        "platform": "gitea",
-        "endpoint": "https://gitea.devcloud01.intern.steadforce.com/api/v1",
-        "token": "194436a9434ea91db4692379cbe0b04525dc9607",
-        "autodiscover": false,
-        "onboardingConfig": {"extends": ["config:base", ":dependencyDashboard"]},
-        "allowedPostUpgradeCommands": [ "^echo apply custom helm file filters$" ],
-        "repositories": [ "steadforce-applications/vertical-pod-autoscaler", "steadforce-applications/strimzi-operator"],
+        "autodiscover": true,
+        "onboardingConfig": {
+          "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+          "extends": [
+            "config:base",
+            ":dependencyDashboard"
+          ],
+          "postUpdateOptions": [
+            "helmUpdateSubChartArchives"
+          ]
+        },
         "packageRules": [
          {
            "matchManagers": [ 'helmv3' ],
@@ -71,11 +66,32 @@ renovate:
             }
          },
          {
-            matchDatasources: [ 'pypi' ],
-            matchUpdateTypes: [ 'minor', 'patch' ],
-            groupName: '{{manager}} dependencies non-major',
-            groupSlug: 'dependencies-non-major',
-            additionalBranchPrefix: '{{manager}}-'
+            "matchDatasources": [ 'pypi' ],
+            "matchUpdateTypes": [ 'minor', 'patch' ],
+            "groupName": '{{manager}} dependencies non-major',
+            "groupSlug": 'dependencies-non-major',
+            "additionalBranchPrefix": '{{manager}}-'
         }
         ]
       }
+  envFrom:
+  - secretRef:
+      name: renovate-environment
+  extraObjects:
+  - |
+    {{- if .Capabilities.APIVersions.Has "external-secrets.io/v1beta1/ExternalSecret" }}
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: &name renovate-environment
+    spec:
+      dataFrom:
+      - extract:
+          key: /{{ .Values.global.stage }}/renovate/gitea
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: awssm-parameter-store
+      target:
+        name: *name
+    {{- end }}
