@@ -57,15 +57,6 @@ renovate:
         },
         "packageRules": [
          {
-           "matchManagers": [ 'helmv3' ],
-             "postUpgradeTasks": {
-               "commands": [ "echo apply custom helm file filters" ],
-               "fileFilters": [
-                 "charts/*.tgz"
-               ]
-            }
-         },
-         {
             "matchDatasources": [ 'pypi' ],
             "matchUpdateTypes": [ 'minor', 'patch' ],
             "groupName": '{{manager}} dependencies non-major',
