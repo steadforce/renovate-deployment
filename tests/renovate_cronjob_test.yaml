@@ -1,0 +1,68 @@
+suite: test cronjob for renovate
+release:
+  name: renovate
+templates:
+- charts/renovate/templates/cronjob.yaml
+tests:
+- it: check whether changes during development have side-effects on renovate cronjob
+  values:
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - matchSnapshot: {}
+- it: ensure cronjob resources for local renovate
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
+      pattern: "^0(m)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
+      pattern: "^0(m)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
+      pattern: "^0(Ki|Mi|Gi)*$"
+- it: ensure cronjob resources for development renovate
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-development.yaml
+  asserts: &renovateResourcesAssert
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
+      pattern: "^[1-9][0-9]*(m)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
+      pattern: "^[1-9][0-9]*(m)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+- it: ensure cronjob resources for production renovate
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *renovateResourcesAssert
+- it: ensure cronjob images for local renovate container
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts: &renovateImageAssert
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].image
+      pattern: "^ghcr.io/renovatebot/renovate:"
+- it: ensure cronjob images for development renovate container
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-development.yaml
+  asserts: *renovateImageAssert
+- it: ensure cronjob images for production renovate container
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *renovateImageAssert

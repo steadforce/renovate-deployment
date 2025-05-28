@@ -18,4 +18,9 @@ renovate:
       resources:
         limits: {}
         requests: {}
-  resources: ~
+  resources:
+    limits:
+     cpu: 0m
+    requests:
+     cpu: 0m
+     memory: 0Mi
