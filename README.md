@@ -40,14 +40,6 @@ Or with output in JUnit format:
  docker run --pull=always -ti --rm -v "$(pwd):/apps" -u $(id -u) helmunittest/helm-unittest -o test-output.xml .
 ```
 
-## Render resource local
-
-```
-  helm template -n renovate --release-name renovate --include-crds --skip-tests \
-  -a batch/v1/CronJob \
-  -f values-local.yaml --output-dir _local .
-```
-
 ## Render resource locally
 
 ### local
