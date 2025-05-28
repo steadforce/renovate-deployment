@@ -72,3 +72,21 @@ tests:
   values:
   - ../values-production.yaml
   asserts: *renovateImageAssert
+- it: ensure local cronjob schedule
+  values:
+  - ../values-local.yaml
+  asserts:
+  - equal:
+      path: spec.schedule
+      value: "*/1 * * * *"
+- it: ensure development cronjob schedule
+  values:
+  - ../values-development.yaml
+  asserts: &renovateScheduleAssert
+  - equal:
+      path: spec.schedule
+      value: 13 */1 * * *
+- it: ensure production cronjob schedule
+  values:
+  - ../values-production.yaml
+  asserts: *renovateScheduleAssert

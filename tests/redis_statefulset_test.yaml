@@ -78,28 +78,28 @@ tests:
   - charts/renovate/charts/redis/templates/master/application.yaml
   values:
   - ../values-local.yaml
-  asserts: &renovateImageAssert
+  asserts: &redisImageAssert
   - matchRegex:
       path: spec.template.spec.containers[?(@.name == "redis")].image
       pattern: "^docker.io/bitnami/redis:"
-- it: ensure statefulset images for development renovate container
+- it: ensure statefulset images for development redis
   templates:
   - charts/renovate/charts/redis/templates/master/application.yaml
   values:
   - ../values-development.yaml
-  asserts: *renovateImageAssert
-- it: ensure statefulset images for production renovate container
+  asserts: *redisImageAssert
+- it: ensure statefulset images for production redis
   templates:
   - charts/renovate/charts/redis/templates/master/application.yaml
   values:
   - ../values-production.yaml
-  asserts: *renovateImageAssert
+  asserts: *redisImageAssert
 - it: ensure statefulset volumeClaimTemplates for local redis container
   templates:
   - charts/renovate/charts/redis/templates/master/application.yaml
   values:
   - ../values-local.yaml
-  asserts: &renovateImageAssert
+  asserts: &redisVolumeClaimTemplatesAssert
   - equal:
       path: spec.volumeClaimTemplates
       value:
@@ -118,15 +118,15 @@ tests:
               requests:
                 storage: 100Mi
             storageClassName: nfs1
-- it: ensure statefulset volumeClaimTemplates for development renovate container
+- it: ensure statefulset volumeClaimTemplates for development redis
   templates:
   - charts/renovate/charts/redis/templates/master/application.yaml
   values:
   - ../values-development.yaml
-  asserts: *renovateImageAssert
-- it: ensure statefulset volumeClaimTemplates for production renovate container
+  asserts: *redisVolumeClaimTemplatesAssert
+- it: ensure statefulset volumeClaimTemplates for production redis
   templates:
   - charts/renovate/charts/redis/templates/master/application.yaml
   values:
   - ../values-production.yaml
-  asserts: *renovateImageAssert
+  asserts: *redisVolumeClaimTemplatesAssert
