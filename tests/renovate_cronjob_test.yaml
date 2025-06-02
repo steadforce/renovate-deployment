@@ -1,0 +1,199 @@
+suite: test cronjob for renovate
+release:
+  name: renovate
+templates:
+- charts/renovate/templates/cronjob.yaml
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: check whether changes during development have side-effects on local renovate cronjob
+  values:
+  - ../values-local.yaml
+  asserts:
+  - matchSnapshot: {}
+- it: check whether changes during development have side-effects on development renovate cronjob
+  values:
+  - ../values-development.yaml
+  asserts:
+  - matchSnapshot: {}
+- it: check whether changes during development have side-effects on production renovate cronjob
+  values:
+  - ../values-production.yaml
+  asserts:
+  - matchSnapshot: {}
+- it: ensure cronjob resources for local renovate
+  values:
+  - ../values-local.yaml
+  asserts:
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
+      pattern: "^0(m)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
+      pattern: "^0(m)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
+      pattern: "^0(Ki|Mi|Gi)*$"
+- it: ensure cronjob resources for development renovate
+  values:
+  - ../values-development.yaml
+  asserts: &renovateResourcesAssert
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
+      pattern: "^[1-9][0-9]*(m)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
+      pattern: "^[1-9][0-9]*(m)*$"
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+- it: ensure cronjob resources for production renovate
+  values:
+  - ../values-production.yaml
+  asserts: *renovateResourcesAssert
+- it: ensure cronjob images for local renovate container
+  values:
+  - ../values-local.yaml
+  asserts: &renovateImageAssert
+  - matchRegex:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].image
+      pattern: "^ghcr.io/renovatebot/renovate:"
+- it: ensure cronjob images for development renovate container
+  values:
+  - ../values-development.yaml
+  asserts: *renovateImageAssert
+- it: ensure cronjob images for production renovate container
+  values:
+  - ../values-production.yaml
+  asserts: *renovateImageAssert
+- it: ensure local cronjob schedule
+  values:
+  - ../values-local.yaml
+  asserts:
+  - equal:
+      path: spec.schedule
+      value: "*/1 * * * *"
+- it: ensure development cronjob schedule
+  values:
+  - ../values-development.yaml
+  asserts: &renovateScheduleAssert
+  - equal:
+      path: spec.schedule
+      value: "13 */1 * * *"
+- it: ensure production cronjob schedule
+  values:
+  - ../values-production.yaml
+  asserts: *renovateScheduleAssert
+- it: ensure local cronjob activeDeadlineSeconds
+  values:
+  - ../values-local.yaml
+  asserts: &renovateActiveDeadlineSecondsAssert
+  - equal:
+      path: spec.jobTemplate.spec.activeDeadlineSeconds
+      value: 1200
+- it: ensure development cronjob activeDeadlineSeconds
+  values:
+  - ../values-development.yaml
+  asserts: *renovateActiveDeadlineSecondsAssert
+- it: ensure production cronjob activeDeadlineSeconds
+  values:
+  - ../values-production.yaml
+  asserts: *renovateActiveDeadlineSecondsAssert
+- it: ensure local cronjob concurrencyPolicy
+  values:
+  - ../values-local.yaml
+  asserts: &renovateConcurrencyPolicyAssert
+  - equal:
+      path: spec.concurrencyPolicy
+      value: Forbid
+- it: ensure development cronjob concurrencyPolicy
+  values:
+  - ../values-development.yaml
+  asserts: *renovateConcurrencyPolicyAssert
+- it: ensure production cronjob concurrencyPolicy
+  values:
+  - ../values-production.yaml
+  asserts: *renovateConcurrencyPolicyAssert
+- it: ensure local cronjob failedJobsHistoryLimit
+  values:
+  - ../values-local.yaml
+  asserts: &renovateFailedJobsHistoryLimitAssert
+  - equal:
+      path: spec.failedJobsHistoryLimit
+      value: 2
+- it: ensure development cronjob failedJobsHistoryLimit
+  values:
+  - ../values-development.yaml
+  asserts: *renovateFailedJobsHistoryLimitAssert
+- it: ensure production cronjob failedJobsHistoryLimit
+  values:
+  - ../values-production.yaml
+  asserts: *renovateFailedJobsHistoryLimitAssert
+- it: ensure local cronjob jobBackoffLimit
+  values:
+  - ../values-local.yaml
+  asserts: &renovateJobBackoffLimitAssert
+  - equal:
+      path: spec.jobTemplate.spec.backoffLimit
+      value: 3
+- it: ensure development cronjob jobBackoffLimit
+  values:
+  - ../values-development.yaml
+  asserts: *renovateJobBackoffLimitAssert
+- it: ensure production cronjob jobBackoffLimit
+  values:
+  - ../values-production.yaml
+  asserts: *renovateJobBackoffLimitAssert
+- it: ensure local cronjob jobRestartPolicy
+  values:
+  - ../values-local.yaml
+  asserts: &renovateJobRestartPolicyAssert
+  - equal:
+      path: spec.jobTemplate.spec.template.spec.restartPolicy
+      value: Never
+- it: ensure development cronjob jobRestartPolicy
+  values:
+  - ../values-development.yaml
+  asserts: *renovateJobRestartPolicyAssert
+- it: ensure production cronjob jobRestartPolicy
+  values:
+  - ../values-production.yaml
+  asserts: *renovateJobRestartPolicyAssert
+- it: ensure local cronjob successfulJobsHistoryLimit
+  values:
+  - ../values-local.yaml
+  asserts: &renovateSuccessfulJobsHistoryLimitAssert
+  - equal:
+      path: spec.successfulJobsHistoryLimit
+      value: 1
+- it: ensure development cronjob successfulJobsHistoryLimit
+  values:
+  - ../values-development.yaml
+  asserts: *renovateSuccessfulJobsHistoryLimitAssert
+- it: ensure production cronjob successfulJobsHistoryLimit
+  values:
+  - ../values-production.yaml
+  asserts: *renovateSuccessfulJobsHistoryLimitAssert
+- it: ensure local cronjob uses envFrom renovate-environment secret for environment variables
+  values:
+  - ../values-local.yaml
+  asserts: &renovateEnvFromAssert
+  - equal:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].envFrom
+      value:
+        - secretRef:
+            name: renovate-environment
+- it: ensure development cronjob  uses envFrom renovate-environment secret for environment variables
+  values:
+  - ../values-development.yaml
+  asserts: *renovateEnvFromAssert
+- it: ensure production cronjob  uses envFrom renovate-environment secret for environment variables
+  values:
+  - ../values-production.yaml
+  asserts: *renovateEnvFromAssert

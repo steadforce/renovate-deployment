@@ -18,23 +18,90 @@ and then also commit that new version alongside with the altered
 See the [Helm docs](https://helm.sh/docs/topics/charts/#chart-dependencies)
 for details.
 
-## Updating
+## Secrets
 
-Check the [Renovate Helm values file](https://github.com/renovatebot/helm-charts/blob/main/charts/renovate/values.yaml)
-(select updated tag version) on Github for the used Renovate image version.
-This version (without patch number) should also be used in `values.yaml`.
+We use [external secrets](https://external-secrets.io) to manage the secrets needed for this deployment.
+For documentation on how to provide these secrets, take a look at the
+[external-secrets-deployment](https://github.com/steadforce/external-secrets-deployment) README.md.
 
-Verify on our [Renovate image repository](https://gitea.cloud01.intern.steadforce.com/steadforce-applications/renovate-image/commits/branch/main),
-that this particular version was already pushed to Harbor. If not try to build this version on
-[Jenkins](https://jenkins-steadops.k8s01.steadforce.com/job/steadforce-applications/job/renovate-image/job/main/),
-if the corresponding Pull Request was already merged. If the version is not present at all on
-the repository commits, update the image (and build it with Jenkins) or choose an existing
-image, which is nearby the required version.
+# Testing
 
-## Render resource local
+## values-subchart-overrides.yaml
 
+The `values-subchart-overrides.yaml` file is used to override values in the renovate chart.
+We have to separate the values for the subcharts from the values for the main chart, to be able to
+unit test for incompatible changes in values of the subcharts. This is necessary because helm does not allow
+switching off the usage of values.yaml. Now it's possible to test if we use the same registry and repository
+for images as the subcharts are using.
+
+## run helm unittests
+
+```shell
+ docker run --pull=always -ti --rm -v "$(pwd):/apps" -u $(id -u) helmunittest/helm-unittest .
 ```
-  helm template -n renovate --release-name renovate --include-crds --skip-tests \
-  -a batch/v1/CronJob \
-  -f values-local.yaml --output-dir _local .
+
+Or with output in JUnit format:
+
+```shell
+ docker run --pull=always -ti --rm -v "$(pwd):/apps" -u $(id -u) helmunittest/helm-unittest -o test-output.xml .
 ```
+
+## Render resource locally
+
+### local
+
+```shell
+ helm template \
+  --include-crds \
+  --output-dir _local/local \
+  --release-name renovate \
+  --skip-tests \
+  -a external-secrets.io/v1beta1/ExternalSecret \
+  -f values-subchart-overrides.yaml \
+  -f values-local.yaml \
+  -n renovate \
+  .
+```
+
+### development
+
+```shell
+ helm template \
+  --include-crds \
+  --output-dir _local/dev \
+  --release-name renovate \
+  --skip-tests \
+  -a external-secrets.io/v1beta1/ExternalSecret \
+  -f values-subchart-overrides.yaml \
+  -f values-development.yaml \
+  -n renovate \
+  .
+```
+
+### production
+
+```shell
+ helm template \
+  --include-crds \
+  --output-dir _local/prod \
+  --release-name renovate \
+  --skip-tests \
+  -a external-secrets.io/v1beta1/ExternalSecret \
+  -f values-subchart-overrides.yaml \
+  -f values-production.yaml \
+  -n renovate \
+  .
+```
+
+## Run act pipeline local
+
+To run the pipeline in local environment, startup the workbench, cd into the folder containing this
+`README.md` and execute the following command:
+
+```shell
+  act
+```
+
+On first execution you're asked which flavour of the act image should be used. Using the default `medium`
+is a good starting point.
+

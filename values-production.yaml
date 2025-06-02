@@ -1,76 +1,9 @@
+global:
+  stage: production
 renovate:
- # sub chart values
   resources:
     limits:
      cpu: 1500m
      memory: 1536Mi
     requests:
      memory: 768Mi
-
-  renovate:
-    config: |
-      {
-        "platform": "gitea",
-        "endpoint": "https://gitea.cloud01.intern.steadforce.com/api/v1",
-        "token": "194436a9434ea91db4692379cbe0b04525dc9607",
-        "autodiscover": false,
-        "onboardingConfig": {"extends": ["config:base", ":dependencyDashboard"]},
-        "allowedPostUpgradeCommands": [ "^echo apply custom helm file filters$" ],
-        "repositories": [
-          "AEK/SecuDok",
-          "Infrastructure/Puppet",
-          "Playground/SteadOps-Harbor-MS-Teams-Forwarder",
-          "Playground/Steadops-Room-Reservations-Deployment",
-          "Playground/SteadOps-Steadies-K8s-Workplace",
-          "steadforce-applications/argocd-bootstrap",
-          "steadforce-applications/chaos-mesh",
-          "steadforce-applications/cert-manager-operator",
-          "steadforce-applications/clusterissuer-certupdate-controller",
-          "steadforce-applications/documentation",
-          "steadforce-applications/forecastle",
-          "steadforce-applications/gitea",
-          "steadforce-applications/harbor",
-          "steadforce-applications/istio",
-          "steadforce-applications/istio-cni",
-          "steadforce-applications/istio-egress",
-          "steadforce-applications/istio-ingress",
-          "steadforce-applications/k8ssandra-operator",
-          "steadforce-applications/kafka",
-          "steadforce-applications/kured",
-          "steadforce-applications/languagetool",
-          "steadforce-applications/metallb",
-          "steadforce-applications/minio",
-          "steadforce-applications/mitarbeiter-kalender",
-          "steadforce-applications/moodle",
-          "steadforce-applications/neo4j",
-          "steadforce-applications/nfs-provider",
-          "steadforce-applications/postgres-operator",
-          "steadforce-applications/prometheus-operator",
-          "steadforce-applications/puppet-dashboard",
-          "steadforce-applications/raumplan",
-          "steadforce-applications/renovate",
-          "steadforce-applications/renovate-image",
-          "steadforce-applications/sealed-secrets-operator",
-          "steadforce-applications/strimzi-operator",
-          "steadforce-applications/telefonliste",
-          "steadforce-applications/vertical-pod-autoscaler",
-        ],
-        "packageRules": [
-         {
-           "matchManagers": [ 'helmv3' ],
-             "postUpgradeTasks": {
-               "commands": [ "echo apply custom helm file filters" ],
-               "fileFilters": [
-                 "charts/*.tgz"
-               ]
-             }
-         },
-         {
-            matchDatasources: [ 'pypi' ],
-            matchUpdateTypes: [ 'minor', 'patch' ],
-            groupName: '{{manager}} dependencies non-major',
-            groupSlug: 'dependencies-non-major',
-            additionalBranchPrefix: '{{manager}}-'
-        }
-        ]
-      }

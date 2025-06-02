@@ -1,3 +1,5 @@
+global:
+  stage: local
 renovate:
   # sub chart values
   cronjob:
@@ -10,10 +12,14 @@ renovate:
     architecture: standalone
     master:
       resources:
-        limits: {}
-        requests: {}
-    replica:
-      resources:
-        limits: {}
-        requests: {}
-  resources: ~
+        limits:
+         cpu: 0m
+        requests:
+         cpu: 0m
+         memory: 0Mi
+  resources:
+    limits:
+     cpu: 0m
+    requests:
+     cpu: 0m
+     memory: 0Mi

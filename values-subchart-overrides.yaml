@@ -1,0 +1,93 @@
+renovate:
+  cronjob:
+    activeDeadlineSeconds: 1200
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 2
+    jobBackoffLimit: 3
+    jobRestartPolicy: Never
+    schedule: '13 */1 * * *'
+    successfulJobsHistoryLimit: 1
+
+  redis:
+    enabled: true
+    global:
+      storageClass: "nfs1"
+    master:
+      persistence:
+        size: 100Mi
+      resources:
+        limits:
+          cpu: 300m
+          memory: 48Mi
+        requests:
+          cpu: 15m
+          memory: 24Mi
+    replica:
+      persistence:
+        size: 100Mi
+      resources:
+        limits:
+          cpu: 300m
+          memory: 48Mi
+        requests:
+          cpu: 15m
+          memory: 24Mi
+    architecture: replication
+  resources:
+    limits:
+     cpu: 1000m
+     memory: 768Mi
+    requests:
+     cpu: 600m
+     memory: 512Mi
+
+  renovate:
+    config: |
+      {
+         "autodiscover": true,
+         "onboardingConfig": {
+           "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+           "extends": [
+             "config:recommended",
+             ":dependencyDashboard"
+           ],
+           "postUpdateOptions": [
+             "helmUpdateSubChartArchives"
+           ]
+         },
+         "packageRules": [
+           {
+             "matchDatasources": [
+               "pypi"
+             ],
+             "matchUpdateTypes": [
+               "minor",
+               "patch"
+             ],
+             "groupName": "{{manager}} dependencies non-major",
+             "groupSlug": "dependencies-non-major",
+             "additionalBranchPrefix": "{{manager}}-"
+           }
+         ]
+      }
+  envFrom:
+  - secretRef:
+      name: renovate-environment
+  extraObjects:
+  - |
+    {{- if .Capabilities.APIVersions.Has "external-secrets.io/v1beta1/ExternalSecret" }}
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: &name renovate-environment
+    spec:
+      dataFrom:
+      - extract:
+          key: /{{ .Values.global.stage }}/renovate/gitea
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: awssm-parameter-store
+      target:
+        name: *name
+    {{- end }}
