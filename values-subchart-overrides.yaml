@@ -3,10 +3,10 @@ renovate:
     activeDeadlineSeconds: 1200
     concurrencyPolicy: Forbid
     failedJobsHistoryLimit: 2
+    jobBackoffLimit: 3
     jobRestartPolicy: Never
     schedule: '13 */1 * * *'
     successfulJobsHistoryLimit: 1
-    jobBackoffLimit: 3
 
   redis:
     enabled: true
