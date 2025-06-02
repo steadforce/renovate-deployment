@@ -3,7 +3,15 @@
   "extends": [
     "config:recommended",
     ":dependencyDashboard",
-    "regexManagers:dockerfileVersions"
+    "customManagers:dockerfileVersions"
+  ],
+  "packageRules": [
+    {
+      "automerge": true,
+      "automergeStrategy": "squash",
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor", "patch"]
+    }
   ],
   "postUpdateOptions": [
     "helmUpdateSubChartArchives"
