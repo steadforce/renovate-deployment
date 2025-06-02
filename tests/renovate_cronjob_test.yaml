@@ -85,7 +85,7 @@ tests:
   asserts: &renovateScheduleAssert
   - equal:
       path: spec.schedule
-      value: 13 */1 * * *
+      value: "13 */1 * * *"
 - it: ensure production cronjob schedule
   values:
   - ../values-production.yaml
