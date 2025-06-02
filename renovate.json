@@ -9,7 +9,8 @@
     {
       "automerge": true,
       "automergeStrategy": "squash",
-      "matchPackagePatterns": ["*"]
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor", "patch"]
     }
   ],
   "postUpdateOptions": [
