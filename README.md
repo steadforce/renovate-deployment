@@ -18,6 +18,12 @@ and then also commit that new version alongside with the altered
 See the [Helm docs](https://helm.sh/docs/topics/charts/#chart-dependencies)
 for details.
 
+## Secrets
+
+We use [external secrets](https://external-secrets.io) to manage the secrets needed for this deployment.
+For documentation on how to provide these secrets, take a look at the
+[external-secrets-deployment](https://github.com/steadforce/external-secrets-deployment) README.md.
+
 # Testing
 
 ## values-subchart-overrides.yaml
