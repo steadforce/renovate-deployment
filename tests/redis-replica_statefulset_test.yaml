@@ -24,7 +24,7 @@ tests:
   - ../values-production.yaml
   asserts:
   - matchSnapshot: {}
-- it: ensure statefulset resources for development redis
+- it: ensure statefulset resource limits and requests for development redis
   templates:
   - charts/renovate/charts/redis/templates/replicas/application.yaml
   values:
@@ -32,17 +32,17 @@ tests:
   asserts: &renovateResourcesAssert
   - matchRegex:
       path: spec.template.spec.containers[*].resources.limits.cpu
-      pattern: "^[1-9][0-9]*(m)*$"
+      pattern: &cpuPattern "^[1-9][0-9]*(m)?$"
   - matchRegex:
       path: spec.template.spec.containers[*].resources.limits.memory
-      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+      pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
       path: spec.template.spec.containers[*].resources.requests.cpu
-      pattern: "^[1-9][0-9]*(m)*$"
+      pattern: *cpuPattern
   - matchRegex:
       path: spec.template.spec.containers[*].resources.requests.memory
-      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
-- it: ensure statefulset resources for production redis
+      pattern: *memoryPattern
+- it: ensure statefulset resource limits and requests for production redis
   templates:
   - charts/renovate/charts/redis/templates/replicas/application.yaml
   values:
