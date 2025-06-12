@@ -43,16 +43,16 @@ tests:
   asserts: &renovateResourcesAssert
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
-      pattern: "^[1-9][0-9]*(m)?$"
+      pattern: &cpuPattern "^[1-9][0-9]*(m)?$"
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
-      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+      pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
-      pattern: "^[1-9][0-9]*(m)?$"
+      pattern: *cpuPattern
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
-      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+      pattern: *memoryPattern
 - it: ensure cronjob resource limits and requests for production renovate
   values:
   - ../values-production.yaml
