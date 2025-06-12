@@ -21,39 +21,39 @@ tests:
   - ../values-production.yaml
   asserts:
   - matchSnapshot: {}
-- it: ensure cronjob resources for local renovate
+- it: ensure cronjob resource limits and requests for local renovate
   values:
   - ../values-local.yaml
   asserts:
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
-      pattern: "^0(m)*$"
+      pattern: &localCpuPattern "^0(m)?$"
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
-      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
-      pattern: "^0(m)*$"
+      pattern: *localCpuPattern
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
-      pattern: "^0(Ki|Mi|Gi)*$"
-- it: ensure cronjob resources for development renovate
+      pattern: "^0(Ki|Mi|Gi)?$"
+- it: ensure cronjob resource limits and requests for development renovate
   values:
   - ../values-development.yaml
   asserts: &renovateResourcesAssert
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
-      pattern: "^[1-9][0-9]*(m)*$"
+      pattern: "^[1-9][0-9]*(m)?$"
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
-      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
-      pattern: "^[1-9][0-9]*(m)*$"
+      pattern: "^[1-9][0-9]*(m)?$"
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
-      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)*$"
-- it: ensure cronjob resources for production renovate
+      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+- it: ensure cronjob resource limits and requests for production renovate
   values:
   - ../values-production.yaml
   asserts: *renovateResourcesAssert
