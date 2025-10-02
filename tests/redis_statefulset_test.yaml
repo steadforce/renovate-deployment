@@ -81,7 +81,7 @@ tests:
   asserts: &redisImageAssert
   - matchRegex:
       path: spec.template.spec.containers[?(@.name == "redis")].image
-      pattern: "^docker.io/bitnami/redis:"
+      pattern: "^docker.io/bitnamilegacy/redis:"
 - it: ensure statefulset images for development redis
   templates:
   - charts/renovate/charts/redis/templates/master/application.yaml
