@@ -1,3 +1,6 @@
+global:
+  security:
+    allowInsecureImages: true
 renovate:
   cronjob:
     activeDeadlineSeconds: 1200
