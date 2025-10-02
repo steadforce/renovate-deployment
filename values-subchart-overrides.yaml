@@ -12,6 +12,8 @@ renovate:
     enabled: true
     global:
       storageClass: "nfs1"
+    image:
+      repository: bitnamilegacy/redis
     master:
       persistence:
         size: 100Mi
