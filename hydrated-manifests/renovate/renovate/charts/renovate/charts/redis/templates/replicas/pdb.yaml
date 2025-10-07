@@ -1,0 +1,21 @@
+---
+# Source: renovate/charts/renovate/charts/redis/templates/replicas/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: renovate-redis-replicas
+  namespace: "renovate"
+  labels:
+    app.kubernetes.io/instance: renovate
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 7.4.3
+    helm.sh/chart: redis-20.13.4
+    app.kubernetes.io/component: replica
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: renovate
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: replica
