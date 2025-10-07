@@ -31,13 +31,6 @@ jobs:
       id: renovate_subchart_version
       run: |
         echo "version=$(yq 'explode( . ) | .dependencies[] | select(.name == "renovate").version' Chart.yaml)" >> "$GITHUB_OUTPUT"
-  job2:
-    runs-on: ubuntu-latest
-    needs: get-renovate-subchart-version
-    steps:
-      - env:
-          OUTPUT1: ${{ needs.get-renovate-subchart-version.outputs.version }}
-        run: echo "$OUTPUT1"
   hydrate-chart:
     runs-on: ubuntu-latest
     needs:
@@ -75,4 +68,4 @@ jobs:
       with:
         base: environments/${{ matrix.hydration }}
         branch: hydration-pull-request/${{ matrix.hydration }}-${{ needs.get-renovate-subchart-version.outputs.version }}
-        title: Hydrated manifests for environment ${{ matrix.hydration }}
+        title: Hydrated manifests for environment ${{ matrix.hydration }} for renovate subchart version ${{ needs.get-renovate-subchart-version.outputs.version }}
