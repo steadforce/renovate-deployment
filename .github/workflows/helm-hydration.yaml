@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Define Hydrations
+    - name: Define hydrations
       id: hydrations
       run: |
         echo "hydrations=$(yq 'keys | to_json(0)' helm-config.yaml)" >> "$GITHUB_OUTPUT"
@@ -48,7 +48,7 @@ jobs:
           --release-name renovate \
           --skip-tests \
           .
-    - name: Create Pull Request
+    - name: Create pull request
       if: ${{ !env.ACT }}
       uses: peter-evans/create-pull-request@v7
       with:
