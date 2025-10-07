@@ -62,7 +62,7 @@ Or with output in JUnit format:
  done
 ```
 
-## Run act pipeline local
+## Run act pipeline locally
 
 To run the pipeline in local environment, startup the workbench, cd into the folder containing this
 `README.md` and execute the following command:
