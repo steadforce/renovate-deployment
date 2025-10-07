@@ -8,10 +8,8 @@ on:
 jobs:
   define-matrix:
     runs-on: ubuntu-latest
-
     outputs:
       hydrations: ${{ steps.hydrations.outputs.hydrations }}
-
     steps:
     - uses: actions/checkout@v5
     - name: Define hydrations
@@ -20,10 +18,8 @@ jobs:
         echo "hydrations=$(yq 'keys | to_json(0)' helm-config.yaml)" >> "$GITHUB_OUTPUT"
   get-renovate-subchart-version:
     runs-on: ubuntu-latest
-
     outputs:
       version: ${{ steps.renovate_subchart_version.outputs.version }}
-
     steps:
     - uses: actions/checkout@v5
     - name: Get renovate subchart version
