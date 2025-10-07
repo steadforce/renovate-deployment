@@ -9,8 +9,8 @@ metadata:
     app.kubernetes.io/instance: renovate
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.3
-    helm.sh/chart: redis-20.13.4
+    app.kubernetes.io/version: 8.0.3
+    helm.sh/chart: redis-21.2.13
     app.kubernetes.io/component: master
 spec:
   replicas: 1
@@ -29,8 +29,8 @@ spec:
         app.kubernetes.io/instance: renovate
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: redis
-        app.kubernetes.io/version: 7.4.3
-        helm.sh/chart: redis-20.13.4
+        app.kubernetes.io/version: 8.0.3
+        helm.sh/chart: redis-21.2.13
         app.kubernetes.io/component: master
       annotations:
         checksum/configmap: 2a9ab4a5432825504d910f022638674ce88eaefe9f9f595ad8bc107377d104fb
@@ -65,7 +65,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: redis
-          image: docker.io/bitnamilegacy/redis:7.4.3-debian-12-r0
+          image: docker.io/bitnamilegacy/redis:8.0.3-debian-12-r1
           imagePullPolicy: "IfNotPresent"
           securityContext:
             allowPrivilegeEscalation: false
@@ -109,7 +109,7 @@ spec:
               command:
                 - /bin/bash
                 - -ec
-                - /health/ping_liveness_local.sh 5
+                - "/health/ping_liveness_local.sh 5"
           readinessProbe:
             initialDelaySeconds: 20
             periodSeconds: 5
@@ -120,7 +120,7 @@ spec:
               command:
                 - /bin/bash
                 - -ec
-                - /health/ping_readiness_local.sh 1
+                - "/health/ping_readiness_local.sh 1"
           resources:
             limits:
               cpu: 0m
