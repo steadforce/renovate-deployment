@@ -1,15 +1,18 @@
+# configuration file for the different environments
+# it is used by the pipeline hydration step to render
+# the manifests for the different environments
 local:
   apis: &apis
   - external-secrets.io/v1beta1/ExternalSecret
   valueFiles:
   - values-subchart-overrides.yaml
   - values-local.yaml
-sf-k8s01-dev: &environment
+sf-k8s01-dev: &devEnvironment
   apis: *apis
   valueFiles:
   - values-subchart-overrides.yaml
   - values-development.yaml
-sf-k8s02-dev: *environment
+sf-k8s02-dev: *devEnvironment
 sf-k8s01-prod:
   apis: *apis
   valueFiles:
