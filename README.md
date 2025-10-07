@@ -48,52 +48,21 @@ Or with output in JUnit format:
 
 ## Render resource locally
 
-### local
-
 ```shell
- helm template \
-  --include-crds \
-  --output-dir _local/local \
-  --release-name renovate \
-  --skip-tests \
-  -a external-secrets.io/v1beta1/ExternalSecret \
-  -f values-subchart-overrides.yaml \
-  -f values-local.yaml \
-  -n renovate \
-  .
+ for cluster in $(yq 'keys[]' helm-config.yaml); do
+    helm template \
+      -a "$(cluster=$cluster yq '.[env(cluster)].apis | @csv' helm-config.yaml)" \
+      -f "$(cluster=$cluster yq '.[env(cluster)].valueFiles | @csv' helm-config.yaml)" \
+      -n renovate \
+      --output-dir _local/$cluster \
+      --include-crds \
+      --release-name renovate \
+      --skip-tests \
+      .
+ done
 ```
 
-### development
-
-```shell
- helm template \
-  --include-crds \
-  --output-dir _local/dev \
-  --release-name renovate \
-  --skip-tests \
-  -a external-secrets.io/v1beta1/ExternalSecret \
-  -f values-subchart-overrides.yaml \
-  -f values-development.yaml \
-  -n renovate \
-  .
-```
-
-### production
-
-```shell
- helm template \
-  --include-crds \
-  --output-dir _local/prod \
-  --release-name renovate \
-  --skip-tests \
-  -a external-secrets.io/v1beta1/ExternalSecret \
-  -f values-subchart-overrides.yaml \
-  -f values-production.yaml \
-  -n renovate \
-  .
-```
-
-## Run act pipeline local
+## Run act pipeline locally
 
 To run the pipeline in local environment, startup the workbench, cd into the folder containing this
 `README.md` and execute the following command:

@@ -16,6 +16,23 @@
       "matchPackageNames": [
         "*"
       ]
+    },
+    {
+      "automerge": true,
+      "automergeStrategy": "squash",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchPackageNames": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+         "digest",
+         "major",
+         "minor",
+         "patch"
+      ],
+      "platformAutomerge": true
     }
   ],
   "postUpdateOptions": [
