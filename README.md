@@ -48,49 +48,20 @@ Or with output in JUnit format:
 
 ## Render resource locally
 
-### local
-
 ```shell
- helm template \
-  --include-crds \
-  --output-dir _local/local \
-  --release-name renovate \
-  --skip-tests \
-  -a external-secrets.io/v1beta1/ExternalSecret \
-  -f values-subchart-overrides.yaml \
-  -f values-local.yaml \
-  -n renovate \
-  .
-```
-
-### development
-
-```shell
- helm template \
-  --include-crds \
-  --output-dir _local/dev \
-  --release-name renovate \
-  --skip-tests \
-  -a external-secrets.io/v1beta1/ExternalSecret \
-  -f values-subchart-overrides.yaml \
-  -f values-development.yaml \
-  -n renovate \
-  .
-```
-
-### production
-
-```shell
- helm template \
-  --include-crds \
-  --output-dir _local/prod \
-  --release-name renovate \
-  --skip-tests \
-  -a external-secrets.io/v1beta1/ExternalSecret \
-  -f values-subchart-overrides.yaml \
-  -f values-production.yaml \
-  -n renovate \
-  .
+ for cluster in $(yq 'keys[]| @csv' helm-config.yaml); do 
+    apis=$(cluster=$cluster yq '.[env(cluster)].apis | explode(.) | @csv' helm-config.yaml)
+    valueFiles=$(cluster=$cluster yq '.[env(cluster)].valueFiles | explode(.) | @csv' helm-config.yaml)
+    helm template \
+      -a $apis \
+      -f $valueFiles \
+      -n renovate  \
+      --output-dir _local/$cluster \
+      --include-crds \
+      --release-name renovate \
+      --skip-tests \
+      .
+ done
 ```
 
 ## Run act pipeline local

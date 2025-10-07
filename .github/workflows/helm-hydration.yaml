@@ -1,0 +1,57 @@
+name: Helm hydration
+
+on:
+  push:
+    branches:
+    - helm-hydrator
+
+jobs:
+  define-matrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+      hydrations: ${{ steps.hydrations.outputs.hydrations }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Define Hyrations
+      id: hydrations
+      run: |
+        echo "hydrations=$(yq 'keys | to_json(0)' helm-config.yaml)" >> "$GITHUB_OUTPUT"
+
+  hydrate-chart:
+    runs-on: ubuntu-latest
+    needs: define-matrix
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      matrix:
+        hydration: ${{ fromJSON(needs.define-matrix.outputs.hydrations) }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Helm
+      uses: azure/setup-helm@v4.3.0
+    - name: Update Helm dependencies
+      run: |
+        helm dependency update
+    - name: Hydrate
+      env:
+        hydration: ${{ matrix.hydration }}
+      run: |
+        helm template \
+          -a $(hydration=$hydration yq '.[env(hydration)].apis | explode(.) | @csv' helm-config.yaml) \
+          -f $(hydration=$hydration yq '.[env(hydration)].valueFiles | explode(.) | @csv' helm-config.yaml) \
+          -n renovate \
+          --output-dir hydrated-manifests \
+          --include-crds \
+          --release-name renovate \
+          --skip-tests \
+          .
+    - name: Create Pull Request
+      if: ${{ !env.ACT }}
+      uses: peter-evans/create-pull-request@v7
+      with:
+        base: environments/${{ matrix.hydration }}
+        branch: hydration-pull-request/${{ matrix.hydration }}
+        title: Hydrated manifests for environment ${{ matrix.hydration }}
