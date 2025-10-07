@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - main
+    - renovate-41.x
 
 jobs:
   define-matrix:
@@ -18,10 +19,30 @@ jobs:
       id: hydrations
       run: |
         echo "hydrations=$(yq 'keys | to_json(0)' helm-config.yaml)" >> "$GITHUB_OUTPUT"
+  get-renovate-subchart-version:
+    runs-on: ubuntu-latest
 
+    outputs:
+      version: ${{ steps.renovate_subchart_version.outputs.version }}
+
+    steps:
+    - uses: actions/checkout@v5
+    - name: Get renovate subchart version
+      id: renovate_subchart_version
+      run: |
+        echo "version=$(yq 'explode( . ) | .dependencies[] | select(.name == "renovate").version | to_json(0)' Chart.yaml)" >> "$GITHUB_OUTPUT"
+  job2:
+    runs-on: ubuntu-latest
+    needs: get-renovate-subchart-version
+    steps:
+      - env:
+          OUTPUT1: ${{ needs.get-renovate-subchart-version.outputs.version }}
+        run: echo "$OUTPUT1"
   hydrate-chart:
     runs-on: ubuntu-latest
-    needs: define-matrix
+    needs:
+    - define-matrix
+    - get-renovate-subchart-version
     permissions:
       contents: write
       pull-requests: write
@@ -53,5 +74,5 @@ jobs:
       uses: peter-evans/create-pull-request@v7
       with:
         base: environments/${{ matrix.hydration }}
-        branch: hydration-pull-request/${{ matrix.hydration }}
+        branch: hydration-pull-request/${{ matrix.hydration }}-${{ needs.get-renovate-subchart-version.outputs.version }}
         title: Hydrated manifests for environment ${{ matrix.hydration }}
