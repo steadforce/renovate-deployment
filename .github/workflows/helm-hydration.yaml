@@ -40,8 +40,8 @@ jobs:
         hydration: ${{ matrix.hydration }}
       run: |
         helm template \
-          -a $(hydration=$hydration yq '.[env(hydration)].apis | explode(.) | @csv' helm-config.yaml) \
-          -f $(hydration=$hydration yq '.[env(hydration)].valueFiles | explode(.) | @csv' helm-config.yaml) \
+          -a "$(hydration=$hydration yq '.[env(hydration)].apis | explode(.) | @csv' helm-config.yaml)" \
+          -f "$(hydration=$hydration yq '.[env(hydration)].valueFiles | explode(.) | @csv' helm-config.yaml)" \
           -n renovate \
           --output-dir hydrated-manifests \
           --include-crds \

@@ -49,12 +49,10 @@ Or with output in JUnit format:
 ## Render resource locally
 
 ```shell
- for cluster in $(yq 'keys[]| @csv' helm-config.yaml); do 
-    apis=$(cluster=$cluster yq '.[env(cluster)].apis | explode(.) | @csv' helm-config.yaml)
-    valueFiles=$(cluster=$cluster yq '.[env(cluster)].valueFiles | explode(.) | @csv' helm-config.yaml)
+ for cluster in $(yq 'keys[] | @csv' helm-config.yaml); do 
     helm template \
-      -a $apis \
-      -f $valueFiles \
+      -a "$(cluster=$cluster yq '.[env(cluster)].apis | explode(.) | @csv' helm-config.yaml)" \
+      -f "$(cluster=$cluster yq '.[env(cluster)].valueFiles | explode(.) | @csv' helm-config.yaml)" \
       -n renovate  \
       --output-dir _local/$cluster \
       --include-crds \
