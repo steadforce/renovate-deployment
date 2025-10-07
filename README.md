@@ -51,8 +51,8 @@ Or with output in JUnit format:
 ```shell
  for cluster in $(yq 'keys[] | @csv' helm-config.yaml); do 
     helm template \
-      -a "$(cluster=$cluster yq '.[env(cluster)].apis | explode(.) | @csv' helm-config.yaml)" \
-      -f "$(cluster=$cluster yq '.[env(cluster)].valueFiles | explode(.) | @csv' helm-config.yaml)" \
+      -a "$(cluster=$cluster yq '.[env(cluster)].apis | @csv' helm-config.yaml)" \
+      -f "$(cluster=$cluster yq '.[env(cluster)].valueFiles | @csv' helm-config.yaml)" \
       -n renovate  \
       --output-dir _local/$cluster \
       --include-crds \
