@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - main
-    - renovate-41.x
 
 jobs:
   define-matrix:
