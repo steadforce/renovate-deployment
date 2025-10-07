@@ -3,7 +3,7 @@ name: Helm hydration
 on:
   push:
     branches:
-    - helm-hydrator
+    - main
 
 jobs:
   define-matrix:
@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Define Hyrations
+    - name: Define Hydrations
       id: hydrations
       run: |
         echo "hydrations=$(yq 'keys | to_json(0)' helm-config.yaml)" >> "$GITHUB_OUTPUT"
