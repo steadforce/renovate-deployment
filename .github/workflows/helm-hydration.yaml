@@ -8,20 +8,30 @@ on:
 jobs:
   define-matrix:
     runs-on: ubuntu-latest
-
     outputs:
       hydrations: ${{ steps.hydrations.outputs.hydrations }}
-
     steps:
     - uses: actions/checkout@v5
     - name: Define hydrations
       id: hydrations
       run: |
         echo "hydrations=$(yq 'keys | to_json(0)' helm-config.yaml)" >> "$GITHUB_OUTPUT"
-
+  get-renovate-subchart-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.renovate_subchart_version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v5
+    - name: Get renovate subchart version
+      id: renovate_subchart_version
+      run: |
+        DEP_NAME=$(yq '.name' Chart.yaml)
+        echo "version=$(DEP_NAME=$DEP_NAME yq 'explode( . ) | .dependencies[] | select(.name == strenv(DEP_NAME)).version' Chart.yaml)" >> "$GITHUB_OUTPUT"
   hydrate-chart:
     runs-on: ubuntu-latest
-    needs: define-matrix
+    needs:
+    - define-matrix
+    - get-renovate-subchart-version
     permissions:
       contents: write
       pull-requests: write
@@ -53,5 +63,5 @@ jobs:
       uses: peter-evans/create-pull-request@v7
       with:
         base: environments/${{ matrix.hydration }}
-        branch: hydration-pull-request/${{ matrix.hydration }}
-        title: Hydrated manifests for environment ${{ matrix.hydration }}
+        branch: hydration-pull-request/${{ matrix.hydration }}-${{ needs.get-renovate-subchart-version.outputs.version }}
+        title: Hydrated manifests for environment ${{ matrix.hydration }} for renovate subchart version ${{ needs.get-renovate-subchart-version.outputs.version }}
