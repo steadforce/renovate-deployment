@@ -49,15 +49,20 @@ jobs:
       env:
         hydration: ${{ matrix.hydration }}
       run: |
+        RELEASE_NAME=renovate
         helm template \
           -a "$(hydration=$hydration yq '.[env(hydration)].apis | @csv' helm-config.yaml)" \
           -f "$(hydration=$hydration yq '.[env(hydration)].valueFiles | @csv' helm-config.yaml)" \
-          -n renovate \
+          -n $RELEASE_NAME \
           --output-dir hydrated-manifests \
           --include-crds \
-          --release-name renovate \
+          --release-name $RELEASE_NAME \
           --skip-tests \
           .
+          DEP_NAME=$(yq '.name' Chart.yaml)
+          if [ ! -d "hydrated-manifests/$RELEASE_NAME/$RELEASE_NAME" ]; then
+            mv -v hydrated-manifests/$RELEASE_NAME/$DEP_NAME hydrated-manifests/$RELEASE_NAME/$RELEASE_NAME
+          fi
     - name: Create pull request
       if: ${{ !env.ACT }}
       uses: peter-evans/create-pull-request@v7
