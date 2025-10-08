@@ -60,7 +60,7 @@ jobs:
           --skip-tests \
           .
           DEP_NAME=$(yq '.name' Chart.yaml)
-          if [ ! -d "$hydrated-manifests/$RELEASE_NAME/$RELEASE_NAME" ]; then
+          if [ ! -d "hydrated-manifests/$RELEASE_NAME/$RELEASE_NAME" ]; then
             mv -v hydrated-manifests/$RELEASE_NAME/$DEP_NAME hydrated-manifests/$RELEASE_NAME/$RELEASE_NAME
           fi
     - name: Create pull request
