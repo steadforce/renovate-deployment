@@ -42,7 +42,7 @@ jobs:
     - uses: actions/create-github-app-token@v2
       id: generate-token
       with:
-        app-id: 2093802
+        app-id: ${{ secrets.STEADOPS_WORKFLOW_PULL_REQUEST_APP_ID }}
         private-key: ${{ secrets.STEADOPS_WORKFLOW_PULL_REQUEST_APP_PRIVATE_KEY }}
     - uses: actions/checkout@v5
     - name: Set up Helm
