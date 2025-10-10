@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: redis
     app.kubernetes.io/version: 8.0.3
-    helm.sh/chart: redis-21.2.13
+    helm.sh/chart: redis-21.2.14
 data:
   redis.conf: |-
     # User-supplied common configuration:
