@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - main
+    - renovate-43.x
 
 jobs:
   define-matrix:
@@ -69,4 +70,6 @@ jobs:
       with:
         base: environments/${{ matrix.hydration }}
         branch: hydration-pull-request/${{ matrix.hydration }}-${{ needs.get-renovate-subchart-version.outputs.version }}
+        team-reviewers: |
+          steadforce/steadops
         title: Hydrated manifests for environment ${{ matrix.hydration }} for renovate subchart version ${{ needs.get-renovate-subchart-version.outputs.version }}
