@@ -9,8 +9,8 @@ metadata:
     app.kubernetes.io/instance: renovate
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 8.0.3
-    helm.sh/chart: redis-21.2.13
+    app.kubernetes.io/version: 8.2.1
+    helm.sh/chart: redis-22.0.7
     app.kubernetes.io/component: replica
 spec:
   replicas: 3
@@ -29,8 +29,8 @@ spec:
         app.kubernetes.io/instance: renovate
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: redis
-        app.kubernetes.io/version: 8.0.3
-        helm.sh/chart: redis-21.2.13
+        app.kubernetes.io/version: 8.2.1
+        helm.sh/chart: redis-22.0.7
         app.kubernetes.io/component: replica
       annotations:
         checksum/configmap: 2a9ab4a5432825504d910f022638674ce88eaefe9f9f595ad8bc107377d104fb
@@ -65,7 +65,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: redis
-          image: docker.io/bitnamilegacy/redis:8.0.3-debian-12-r1
+          image: docker.io/bitnamilegacy/redis:8.2.1-debian-12-r0
           imagePullPolicy: "IfNotPresent"
           securityContext:
             allowPrivilegeEscalation: false
