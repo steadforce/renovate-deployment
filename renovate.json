@@ -34,8 +34,5 @@
       ],
       "platformAutomerge": true
     }
-  ],
-  "postUpdateOptions": [
-    "helmUpdateSubChartArchives"
   ]
 }
