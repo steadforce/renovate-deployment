@@ -1,0 +1,27 @@
+---
+# Source: renovate/charts/renovate/charts/redis/templates/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: renovate-redis
+  namespace: "renovate"
+  labels:
+    app.kubernetes.io/instance: renovate
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.1
+    helm.sh/chart: redis-22.0.7
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: renovate
+      app.kubernetes.io/name: redis
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - {}
+  ingress:
+    # Allow inbound connections
+    - ports:
+        - port: 6379
