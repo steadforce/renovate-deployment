@@ -1,0 +1,27 @@
+---
+# Source: renovate/charts/renovate/charts/redis/templates/master/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: renovate-redis-master
+  namespace: "renovate"
+  labels:
+    app.kubernetes.io/instance: renovate
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.2.1
+    helm.sh/chart: redis-22.0.7
+    app.kubernetes.io/component: master
+spec:
+  type: ClusterIP
+  internalTrafficPolicy: Cluster
+  sessionAffinity: None
+  ports:
+    - name: tcp-redis
+      port: 6379
+      targetPort: redis
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: renovate
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: master
