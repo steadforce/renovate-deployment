@@ -1,0 +1,61 @@
+---
+# Source: renovate/charts/renovate/templates/cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: renovate
+  labels:
+    helm.sh/chart: renovate-43.54.0
+    app.kubernetes.io/name: renovate
+    app.kubernetes.io/instance: renovate
+    app.kubernetes.io/version: "41.123.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  schedule: "13 */1 * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: renovate
+        app.kubernetes.io/instance: renovate
+    spec:
+      activeDeadlineSeconds: 1200
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: renovate
+            app.kubernetes.io/instance: renovate
+        spec:
+          serviceAccountName: default
+          restartPolicy: Never
+          containers:
+            - name: renovate
+              image: "ghcr.io/renovatebot/renovate:41.123.0"
+              imagePullPolicy: IfNotPresent
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /usr/src/app/config.json
+                  subPath: config.json
+              env:
+                - name: RENOVATE_CONFIG_FILE
+                  value: /usr/src/app/config.json
+                - name: RENOVATE_REDIS_URL
+                  value: redis://renovate-redis-master
+              envFrom:
+                - secretRef:
+                    name: renovate-environment
+              resources:
+                limits:
+                  cpu: 1000m
+                  memory: 768Mi
+                requests:
+                  cpu: 600m
+                  memory: 512Mi
+          volumes:
+            - name: config-volume
+              configMap:
+                name: renovate-config
