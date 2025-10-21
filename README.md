@@ -24,12 +24,14 @@ for images as the subcharts are using.
 ## Run helm unittests
 
 ```shell
+ helm dependency update && \
  docker run --pull=always -ti --rm -v "$(pwd):/apps" -u $(id -u) helmunittest/helm-unittest .
 ```
 
 Or with output in JUnit format:
 
 ```shell
+ helm dependency update && \
  docker run --pull=always -ti --rm -v "$(pwd):/apps" -u $(id -u) helmunittest/helm-unittest -o test-output.xml .
 ```
 
