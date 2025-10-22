@@ -80,8 +80,8 @@ renovate:
       name: renovate-environment
   extraObjects:
   - |
-    {{- if .Capabilities.APIVersions.Has "external-secrets.io/v1beta1/ExternalSecret" }}
-    apiVersion: external-secrets.io/v1beta1
+    {{- if .Capabilities.APIVersions.Has "external-secrets.io/v1/ExternalSecret" }}
+    apiVersion: external-secrets.io/v1
     kind: ExternalSecret
     metadata:
       name: &name renovate-environment

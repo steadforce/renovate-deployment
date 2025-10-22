@@ -5,7 +5,7 @@ namespace: *name
 environments:
   local:
     apis: &apis
-    - external-secrets.io/v1beta1/ExternalSecret
+    - external-secrets.io/v1/ExternalSecret
     valueFiles:
     - values-subchart-overrides.yaml
     - values-local.yaml
