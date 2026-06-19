@@ -5,10 +5,6 @@ on:
   push:
     branches:
       - main
-      - trufflehog
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
