@@ -1,4 +1,4 @@
-# checks out this repository and scan it for secrets
+# checks out this repository and scans it for secrets
 name: Trufflehog
 
 on:
