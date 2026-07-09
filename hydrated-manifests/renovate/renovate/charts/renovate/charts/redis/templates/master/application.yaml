@@ -38,7 +38,6 @@ spec:
         checksum/scripts: bdec350b84a1ace7cc118db113a21c9f160bde3425b07714e1c0c1da722621cf
         checksum/secret: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
     spec:
-      
       securityContext:
         fsGroup: 1001
         fsGroupChangePolicy: Always
@@ -48,7 +47,6 @@ spec:
       automountServiceAccountToken: false
       affinity:
         podAffinity:
-          
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - podAffinityTerm:
@@ -60,7 +58,6 @@ spec:
                 topologyKey: kubernetes.io/hostname
               weight: 1
         nodeAffinity:
-          
       enableServiceLinks: true
       terminationGracePeriodSeconds: 30
       containers:
@@ -71,7 +68,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
+                - ALL
             readOnlyRootFilesystem: true
             runAsGroup: 1001
             runAsNonRoot: true
