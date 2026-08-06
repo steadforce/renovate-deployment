@@ -1,9 +1,9 @@
 ---
-# Source: renovate/charts/renovate/charts/redis/templates/master/application.yaml
+# Source: renovate/charts/renovate/charts/redis/templates/replicas/application.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: renovate-redis-master
+  name: renovate-redis-replicas
   namespace: "renovate"
   labels:
     app.kubernetes.io/instance: renovate
@@ -11,15 +11,15 @@ metadata:
     app.kubernetes.io/name: redis
     app.kubernetes.io/version: 8.2.1
     helm.sh/chart: redis-22.0.7
-    app.kubernetes.io/component: master
+    app.kubernetes.io/component: replica
 spec:
-  replicas: 1
+  replicas: 3
   revisionHistoryLimit: 10
   selector:
     matchLabels:
       app.kubernetes.io/instance: renovate
       app.kubernetes.io/name: redis
-      app.kubernetes.io/component: master
+      app.kubernetes.io/component: replica
   serviceName: renovate-redis-headless
   updateStrategy:
     type: RollingUpdate
@@ -31,24 +31,22 @@ spec:
         app.kubernetes.io/name: redis
         app.kubernetes.io/version: 8.2.1
         helm.sh/chart: redis-22.0.7
-        app.kubernetes.io/component: master
+        app.kubernetes.io/component: replica
       annotations:
         checksum/configmap: 2a9ab4a5432825504d910f022638674ce88eaefe9f9f595ad8bc107377d104fb
         checksum/health: aff24913d801436ea469d8d374b2ddb3ec4c43ee7ab24663d5f8ff1a1b6991a9
         checksum/scripts: 1b4c35786c66cf26e35b0df0a44b7d5f099ff7727fa87d09466111c213ec3116
         checksum/secret: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
     spec:
-      
       securityContext:
         fsGroup: 1001
         fsGroupChangePolicy: Always
         supplementalGroups: []
         sysctls: []
-      serviceAccountName: renovate-redis-master
+      serviceAccountName: renovate-redis-replica
       automountServiceAccountToken: false
       affinity:
         podAffinity:
-          
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - podAffinityTerm:
@@ -56,11 +54,10 @@ spec:
                   matchLabels:
                     app.kubernetes.io/instance: renovate
                     app.kubernetes.io/name: redis
-                    app.kubernetes.io/component: master
+                    app.kubernetes.io/component: replica
                 topologyKey: kubernetes.io/hostname
               weight: 1
         nodeAffinity:
-          
       enableServiceLinks: true
       terminationGracePeriodSeconds: 30
       containers:
@@ -71,7 +68,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
+                - ALL
             readOnlyRootFilesystem: true
             runAsGroup: 1001
             runAsNonRoot: true
@@ -83,12 +80,16 @@ spec:
             - /bin/bash
           args:
             - -ec
-            - /opt/bitnami/scripts/start-scripts/start-master.sh
+            - /opt/bitnami/scripts/start-scripts/start-replica.sh
           env:
             - name: BITNAMI_DEBUG
               value: "false"
             - name: REDIS_REPLICATION_MODE
-              value: master
+              value: replica
+            - name: REDIS_MASTER_HOST
+              value: renovate-redis-master-0.renovate-redis-headless.renovate.svc.cluster.local
+            - name: REDIS_MASTER_PORT_NUMBER
+              value: "6379"
             - name: ALLOW_EMPTY_PASSWORD
               value: "yes"
             - name: REDIS_TLS_ENABLED
@@ -98,10 +99,17 @@ spec:
           ports:
             - name: redis
               containerPort: 6379
+          startupProbe:
+            failureThreshold: 22
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+            tcpSocket:
+              port: redis
           livenessProbe:
             initialDelaySeconds: 20
             periodSeconds: 5
-            # One second longer than command timeout should prevent generation of zombie processes.
             timeoutSeconds: 6
             successThreshold: 1
             failureThreshold: 5
@@ -109,7 +117,7 @@ spec:
               command:
                 - /bin/bash
                 - -ec
-                - "/health/ping_liveness_local.sh 5"
+                - "/health/ping_liveness_local_and_master.sh 5"
           readinessProbe:
             initialDelaySeconds: 20
             periodSeconds: 5
@@ -120,7 +128,7 @@ spec:
               command:
                 - /bin/bash
                 - -ec
-                - "/health/ping_readiness_local.sh 1"
+                - "/health/ping_readiness_local_and_master.sh 1"
           resources:
             limits:
               cpu: 300m
@@ -138,7 +146,7 @@ spec:
             - name: config
               mountPath: /opt/bitnami/redis/mounted-etc
             - name: empty-dir
-              mountPath: /opt/bitnami/redis/etc/
+              mountPath: /opt/bitnami/redis/etc
               subPath: app-conf-dir
             - name: empty-dir
               mountPath: /tmp
@@ -165,7 +173,7 @@ spec:
         labels:
           app.kubernetes.io/instance: renovate
           app.kubernetes.io/name: redis
-          app.kubernetes.io/component: master
+          app.kubernetes.io/component: replica
       spec:
         accessModes:
           - "ReadWriteOnce"
