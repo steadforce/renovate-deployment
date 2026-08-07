@@ -7,3 +7,10 @@ renovate:
      memory: 1536Mi
     requests:
      memory: 768Mi
+  redis:
+    replica:
+      resources:
+        limits:
+          memory: 64Mi
+        requests:
+          memory: 48Mi

@@ -5,7 +5,18 @@
     ":dependencyDashboard",
     "customManagers:dockerfileVersions"
   ],
+  "helm-values": {
+    "managerFilePatterns": [
+      "/(^|/)values.*\\.ya?ml$/"
+    ]
+  },
   "packageRules": [
+    {
+      "matchPackageNames": [
+        "renovate"
+      ],
+      "separateMultipleMajor": true
+    },
     {
       "automerge": true,
       "automergeStrategy": "squash",
