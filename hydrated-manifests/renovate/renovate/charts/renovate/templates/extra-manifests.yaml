@@ -6,8 +6,8 @@ metadata:
   name: &name renovate-environment
 spec:
   dataFrom:
-  - extract:
-      key: /production/renovate/gitea
+    - extract:
+        key: /production/renovate/gitea
   refreshInterval: 1h
   secretStoreRef:
     kind: ClusterSecretStore
