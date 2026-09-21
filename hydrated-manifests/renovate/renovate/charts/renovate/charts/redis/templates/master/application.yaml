@@ -121,10 +121,10 @@ spec:
           resources:
             limits:
               cpu: 300m
-              memory: 48Mi
+              memory: 64Mi
             requests:
               cpu: 15m
-              memory: 24Mi
+              memory: 48Mi
           volumeMounts:
             - name: start-scripts
               mountPath: /opt/bitnami/scripts/start-scripts
