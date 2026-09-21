@@ -8,6 +8,12 @@ renovate:
     requests:
      memory: 768Mi
   redis:
+    master:
+      resources:
+        limits:
+          memory: 64Mi
+        requests:
+          memory: 48Mi
     replica:
       resources:
         limits:
