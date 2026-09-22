@@ -1,4 +1,4 @@
-suite: test cronjob for renovate
+suite: renovate cronjob
 release:
   name: renovate
 templates:
