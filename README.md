@@ -1,14 +1,15 @@
 # Renovate Deployment
 
 Umbrella Helm chart that packages and configures [Renovate](https://github.com/renovatebot/renovate) together with
-its Redis cache for the `local`, `sf-k8s01-dev`, `sf-k8s02-dev`, and `sf-k8s01-prod` environments.
+a [Valkey](https://valkey.io/) cache for the `local`, `sf-k8s01-dev`, `sf-k8s02-dev`, and `sf-k8s01-prod`
+environments.
 
 > [!IMPORTANT]
 > Never install the content of this repository on our clusters manually. Deployment is fully managed by ArgoCD.
 
 ## Overview
 
-- Runs Renovate as a Kubernetes `CronJob`, backed by a `redis` subchart cache for faster repeat runs.
+- Runs Renovate as a Kubernetes `CronJob`, backed by a `valkey` cache for faster repeat runs.
 - Renders Renovate's onboarding config into a `ConfigMap` that is mounted into the job.
 - Fetches the Gitea credentials used by Renovate through an `ExternalSecret`, scoped per environment.
 - Ships Helm unittest coverage for every rendered resource, see [Testing](#testing).
@@ -17,17 +18,17 @@ its Redis cache for the `local`, `sf-k8s01-dev`, `sf-k8s02-dev`, and `sf-k8s01-p
 
 | File / Directory | Purpose |
 | --- | --- |
-| `Chart.yaml` | Declares the pinned `renovate` chart dependency for this umbrella chart. |
-| `values-subchart-overrides.yaml` | Overrides for the `renovate` chart and its bundled Redis subchart. |
+| `Chart.yaml` | Declares the pinned `renovate` and `valkey` chart dependencies for this umbrella chart. |
+| `values-subchart-overrides.yaml` | Overrides for the `renovate` and `valkey` chart dependencies. |
 | `values-local.yaml`, `values-development.yaml`, `values-production.yaml` | Per-environment value overrides. |
 | `helm-config.yaml` | Maps each cluster environment to its `valueFiles` and required Kubernetes `apis`. |
 | `tests/` | Helm unittest suites, one per rendered resource, with git-ignored snapshots. |
 | `renovate.json` | This repository's own Renovate configuration, for keeping its dependencies up to date. |
 
 > [!NOTE]
-> `values-subchart-overrides.yaml` is kept separate from the environment value files so that subchart-compatible
-> settings, such as the image registry and repository used by the `redis` subchart, can be unit tested on their own.
-> Helm does not allow disabling `values.yaml` merging, so this split is the only way to isolate subchart defaults
+> `values-subchart-overrides.yaml` is kept separate from the environment value files so that dependency-compatible
+> settings, such as the image registry and repository used by the `valkey` chart, can be unit tested on their own.
+> Helm does not allow disabling `values.yaml` merging, so this split is the only way to isolate dependency defaults
 > from per-environment overrides.
 
 ## Environments
@@ -36,8 +37,8 @@ its Redis cache for the `local`, `sf-k8s01-dev`, `sf-k8s02-dev`, and `sf-k8s01-p
 
 | Environment | Value Files | Notable Overrides |
 | --- | --- | --- |
-| `local` | `values-subchart-overrides.yaml`, `values-local.yaml` | Zero resource requests, standalone Redis (no replica), 1-minute cronjob schedule, `LOG_LEVEL=debug`. |
-| `sf-k8s01-dev`, `sf-k8s02-dev` | `values-subchart-overrides.yaml`, `values-development.yaml` | Base resource limits, replicated Redis. |
+| `local` | `values-subchart-overrides.yaml`, `values-local.yaml` | Zero resource requests, standalone Valkey (no replicas), 1-minute cronjob schedule, `LOG_LEVEL=debug`. |
+| `sf-k8s01-dev`, `sf-k8s02-dev` | `values-subchart-overrides.yaml`, `values-development.yaml` | Base resource limits, replicated Valkey (1 primary + 3 replicas). |
 | `sf-k8s01-prod` | `values-subchart-overrides.yaml`, `values-production.yaml` | Increased resource limits, 51-minute `activeDeadlineSeconds`. |
 
 ## Prerequisites

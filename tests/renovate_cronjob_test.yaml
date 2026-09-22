@@ -170,16 +170,16 @@ tests:
 - it: ensure production cronjob uses envFrom renovate-environment secret for environment variables
   values: *productionValues
   asserts: *renovateEnvFromAssert
-- it: ensure local cronjob container connects to the Redis cache
+- it: ensure local cronjob container connects to the Valkey cache
   values: *localValues
   asserts: &renovateRedisUrlEnvAssert
   - equal:
       path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env[?(@.name == "RENOVATE_REDIS_URL")].value
-      value: redis://renovate-redis-master
-- it: ensure development cronjob container connects to the Redis cache
+      value: redis://renovate-valkey
+- it: ensure development cronjob container connects to the Valkey cache
   values: *developmentValues
   asserts: *renovateRedisUrlEnvAssert
-- it: ensure production cronjob container connects to the Redis cache
+- it: ensure production cronjob container connects to the Valkey cache
   values: *productionValues
   asserts: *renovateRedisUrlEnvAssert
 - it: ensure local cronjob container sets LOG_LEVEL to debug
