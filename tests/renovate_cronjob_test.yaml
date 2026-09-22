@@ -6,17 +6,17 @@ templates:
 values:
 - ../values-subchart-overrides.yaml
 tests:
-- it: check whether changes during development have side-effects on local renovate cronjob
+- it: matches the local renovate cronjob snapshot
   values: &localValues
   - ../values-local.yaml
   asserts:
   - matchSnapshot: {}
-- it: check whether changes during development have side-effects on development renovate cronjob
+- it: matches the development renovate cronjob snapshot
   values: &developmentValues
   - ../values-development.yaml
   asserts:
   - matchSnapshot: {}
-- it: check whether changes during development have side-effects on production renovate cronjob
+- it: matches the production renovate cronjob snapshot
   values: &productionValues
   - ../values-production.yaml
   asserts:
@@ -164,10 +164,10 @@ tests:
       value:
         - secretRef:
             name: renovate-environment
-- it: ensure development cronjob  uses envFrom renovate-environment secret for environment variables
+- it: ensure development cronjob uses envFrom renovate-environment secret for environment variables
   values: *developmentValues
   asserts: *renovateEnvFromAssert
-- it: ensure production cronjob  uses envFrom renovate-environment secret for environment variables
+- it: ensure production cronjob uses envFrom renovate-environment secret for environment variables
   values: *productionValues
   asserts: *renovateEnvFromAssert
 - it: ensure local cronjob container connects to the Redis cache

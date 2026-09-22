@@ -18,13 +18,13 @@ tests:
   asserts:
   - hasDocuments:
       count: 0
-- it: check whether changes during development have side-effects on development redis statefulset
+- it: matches the development redis replica statefulset snapshot
   templates: *redisReplicaApplicationTemplate
   values: &developmentValues
   - ../values-development.yaml
   asserts:
   - matchSnapshot: {}
-- it: check whether changes during development have side-effects on production redis statefulset
+- it: matches the production redis replica statefulset snapshot
   templates: *redisReplicaApplicationTemplate
   values: &productionValues
   - ../values-production.yaml

@@ -10,20 +10,20 @@ templates:
 values:
 - ../values-subchart-overrides.yaml
 tests:
-- it: check whether changes during development have side-effects on local redis statefulset
+- it: matches the local redis statefulset snapshot
   templates: &redisMasterApplicationTemplate
   - charts/renovate/charts/redis/templates/master/application.yaml
   values: &localValues
   - ../values-local.yaml
   asserts:
   - matchSnapshot: {}
-- it: check whether changes during development have side-effects on development redis statefulset
+- it: matches the development redis statefulset snapshot
   templates: *redisMasterApplicationTemplate
   values: &developmentValues
   - ../values-development.yaml
   asserts:
   - matchSnapshot: {}
-- it: check whether changes during development have side-effects on production redis statefulset
+- it: matches the production redis statefulset snapshot
   templates: *redisMasterApplicationTemplate
   values: &productionValues
   - ../values-production.yaml
