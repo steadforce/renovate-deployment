@@ -11,31 +11,27 @@ values:
 - ../values-subchart-overrides.yaml
 tests:
 - it: check whether changes during development have side-effects on local redis statefulset
-  templates:
+  templates: &redisMasterApplicationTemplate
   - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
+  values: &localValues
   - ../values-local.yaml
   asserts:
   - matchSnapshot: {}
 - it: check whether changes during development have side-effects on development redis statefulset
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
+  templates: *redisMasterApplicationTemplate
+  values: &developmentValues
   - ../values-development.yaml
   asserts:
   - matchSnapshot: {}
 - it: check whether changes during development have side-effects on production redis statefulset
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
+  templates: *redisMasterApplicationTemplate
+  values: &productionValues
   - ../values-production.yaml
   asserts:
   - matchSnapshot: {}
 - it: ensure statefulset resource limits and requests for local redis
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-local.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *localValues
   asserts:
   - matchRegex:
       path: spec.template.spec.containers[*].resources.limits.cpu
@@ -50,10 +46,8 @@ tests:
       path: spec.template.spec.containers[*].resources.requests.memory
       pattern: "^0(Ki|Mi|Gi)?$"
 - it: ensure statefulset resource limits and requests for development redis
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-development.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *developmentValues
   asserts: &renovateResourcesAssert
   - matchRegex:
       path: spec.template.spec.containers[*].resources.limits.cpu
@@ -68,37 +62,27 @@ tests:
       path: spec.template.spec.containers[*].resources.requests.memory
       pattern: *memoryPattern
 - it: ensure statefulset resource limits and requests for production redis
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-production.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *productionValues
   asserts: *renovateResourcesAssert
 - it: ensure statefulset images for local redis container
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-local.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *localValues
   asserts: &redisImageAssert
   - matchRegex:
       path: spec.template.spec.containers[?(@.name == "redis")].image
       pattern: "^docker.io/bitnamilegacy/redis:"
 - it: ensure statefulset images for development redis
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-development.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *developmentValues
   asserts: *redisImageAssert
 - it: ensure statefulset images for production redis
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-production.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *productionValues
   asserts: *redisImageAssert
 - it: ensure statefulset volumeClaimTemplates for local redis container
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-local.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *localValues
   asserts: &redisVolumeClaimTemplatesAssert
   - equal:
       path: spec.volumeClaimTemplates
@@ -119,14 +103,10 @@ tests:
                 storage: 100Mi
             storageClassName: nfs1
 - it: ensure statefulset volumeClaimTemplates for development redis
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-development.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *developmentValues
   asserts: *redisVolumeClaimTemplatesAssert
 - it: ensure statefulset volumeClaimTemplates for production redis
-  templates:
-  - charts/renovate/charts/redis/templates/master/application.yaml
-  values:
-  - ../values-production.yaml
+  templates: *redisMasterApplicationTemplate
+  values: *productionValues
   asserts: *redisVolumeClaimTemplatesAssert
