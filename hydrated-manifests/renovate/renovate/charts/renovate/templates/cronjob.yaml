@@ -22,7 +22,7 @@ spec:
         app.kubernetes.io/name: renovate
         app.kubernetes.io/instance: renovate
     spec:
-      activeDeadlineSeconds: 1200
+      activeDeadlineSeconds: 3060
       backoffLimit: 3
       template:
         metadata:
