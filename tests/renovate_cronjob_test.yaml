@@ -104,7 +104,10 @@ tests:
 - it: ensure production cronjob activeDeadlineSeconds
   values:
   - ../values-production.yaml
-  asserts: *renovateActiveDeadlineSecondsAssert
+  asserts:
+  - equal:
+      path: spec.jobTemplate.spec.activeDeadlineSeconds
+      value: 3060
 - it: ensure local cronjob concurrencyPolicy
   values:
   - ../values-local.yaml
