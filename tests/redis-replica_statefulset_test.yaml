@@ -10,9 +10,16 @@ templates:
 values:
 - ../values-subchart-overrides.yaml
 tests:
-- it: check whether changes during development have side-effects on development redis statefulset
+- it: omits the replica statefulset for local redis (standalone architecture)
   templates: &redisReplicaApplicationTemplate
   - charts/renovate/charts/redis/templates/replicas/application.yaml
+  values:
+  - ../values-local.yaml
+  asserts:
+  - hasDocuments:
+      count: 0
+- it: check whether changes during development have side-effects on development redis statefulset
+  templates: *redisReplicaApplicationTemplate
   values: &developmentValues
   - ../values-development.yaml
   asserts:
