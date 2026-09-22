@@ -1,4 +1,4 @@
-suite: test if the settings for the renovate config configmap are correct
+suite: renovate config configmap
 release:
   name: renovate
 templates:
@@ -6,22 +6,22 @@ templates:
 values:
 - ../values-subchart-overrides.yaml
 tests:
-- it: snapshot test for detecting side effects on local renovate config configmap during local development
+- it: matches the local renovate config configmap snapshot
   values:
   - ../values-local.yaml
   asserts:
   - matchSnapshot: {}
-- it: snapshot test for detecting side effects on development renovate config configmap during local development
+- it: matches the development renovate config configmap snapshot
   values:
   - ../values-development.yaml
   asserts:
   - matchSnapshot: {}
-- it: snapshot test for detecting side effects on renovate config configmap during local development
+- it: matches the production renovate config configmap snapshot
   values:
   - ../values-production.yaml
   asserts:
   - matchSnapshot: {}
-- it: data for local cluster is referencing the correct key(s)
+- it: renders the renovate config data for the local cluster
   values:
   - ../values-local.yaml
   asserts: &dataAssert
@@ -56,11 +56,11 @@ tests:
                }
              ]
           }
-- it: data for development cluster is referencing the correct key(s)
+- it: renders the renovate config data for the development cluster
   values:
   - ../values-development.yaml
   asserts: *dataAssert
-- it: data for production cluster is referencing the correct key(s)
+- it: renders the renovate config data for the production cluster
   values:
   - ../values-production.yaml
   asserts: *dataAssert
