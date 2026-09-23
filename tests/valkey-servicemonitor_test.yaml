@@ -15,9 +15,8 @@ tests:
   - equal:
       path: metadata.labels.prometheus
       value: cluster-monitoring
-  - equal:
-      path: spec.endpoints[?(@.port == "metrics")].port
-      value: metrics
+  - exists:
+      path: spec.endpoints[?(@.port == "metrics")]
   - equal:
       path: spec.selector.matchLabels["app.kubernetes.io/component"]
       value: metrics

@@ -16,3 +16,13 @@ tests:
   - equal:
       path: spec.storageClassName
       value: nfs1
+- it: omits the standalone persistent volume claim for development (statefulset volumeClaimTemplates)
+  values:
+  - ../values-development.yaml
+  asserts: &pvcOmittedAssert
+  - hasDocuments:
+      count: 0
+- it: omits the standalone persistent volume claim for production (statefulset volumeClaimTemplates)
+  values:
+  - ../values-production.yaml
+  asserts: *pvcOmittedAssert

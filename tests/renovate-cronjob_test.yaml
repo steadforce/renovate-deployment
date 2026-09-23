@@ -25,31 +25,31 @@ tests:
   values: *localValues
   asserts:
   - matchRegex:
-      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.limits.cpu
       pattern: &localCpuPattern "^0(m)?$"
   - matchRegex:
-      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.limits.memory
       pattern: "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
-      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.requests.cpu
       pattern: *localCpuPattern
   - matchRegex:
-      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.requests.memory
       pattern: "^0(Ki|Mi|Gi)?$"
 - it: sets non-zero renovate resource limits and requests for development
   values: *developmentValues
   asserts: &renovateResourcesAssert
   - matchRegex:
-      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.cpu
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.limits.cpu
       pattern: &cpuPattern "^[1-9][0-9]*(m)?$"
   - matchRegex:
-      path: spec.jobTemplate.spec.template.spec.containers[*].resources.limits.memory
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.limits.memory
       pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
-      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.cpu
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.requests.cpu
       pattern: *cpuPattern
   - matchRegex:
-      path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.requests.memory
       pattern: *memoryPattern
 - it: sets non-zero renovate resource limits and requests for production
   values: *productionValues

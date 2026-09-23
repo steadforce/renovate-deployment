@@ -124,16 +124,24 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *valkeyReplicaCountAssert
+- it: mounts the renovate-valkey persistent volume claim for local
+  templates: *valkeyDeploymentTemplate
+  values: *localValues
+  documentSelector: *deploymentSelector
+  asserts:
+  - equal:
+      path: spec.template.spec.volumes[?(@.name == "valkey-data")].persistentVolumeClaim.claimName
+      value: renovate-valkey
 - it: requests a 100Mi nfs1 volume per valkey pod for development
   templates: *valkeyStatefulsetTemplate
   values: *developmentValues
   documentSelector: *statefulsetSelector
   asserts: &valkeyVolumeClaimTemplatesAssert
   - equal:
-      path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+      path: spec.volumeClaimTemplates[?(@.metadata.name == "valkey-data")].spec.resources.requests.storage
       value: 100Mi
   - equal:
-      path: spec.volumeClaimTemplates[0].spec.storageClassName
+      path: spec.volumeClaimTemplates[?(@.metadata.name == "valkey-data")].spec.storageClassName
       value: nfs1
 - it: requests a 100Mi nfs1 volume per valkey pod for production
   templates: *valkeyStatefulsetTemplate

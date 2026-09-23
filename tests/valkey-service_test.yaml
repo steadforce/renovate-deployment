@@ -13,9 +13,8 @@ tests:
   - equal:
       path: metadata.name
       value: renovate-valkey
-  - equal:
-      path: spec.ports[0].port
-      value: 6379
+  - exists:
+      path: spec.ports[?(@.port == 6379)]
 - it: renders the valkey service targeted by RENOVATE_REDIS_URL for development
   values:
   - ../values-development.yaml
