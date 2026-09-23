@@ -8,7 +8,10 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 jobs:
   hydration:
     uses: steadforce/steadops-workflows/.github/workflows/helm-hydration.yaml@eb34ba77e0d5620b1211c061762d81e4ec386d8c
+    with:
+      create-pull-request: false
