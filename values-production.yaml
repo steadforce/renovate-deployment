@@ -22,3 +22,7 @@ valkey:
       resources:
         limits:
           cpu: 250m
+  startupProbe:
+    timeoutSeconds: 5
+  livenessProbe:
+    timeoutSeconds: 5

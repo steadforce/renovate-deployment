@@ -214,3 +214,14 @@ tests:
   - equal:
       path: *metricsExporterCpuLimitPath
       value: 250m
+- it: sets production-specific probe timeouts for valkey
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].startupProbe.timeoutSeconds
+      value: 5
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].livenessProbe.timeoutSeconds
+      value: 5
