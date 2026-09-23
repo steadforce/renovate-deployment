@@ -4,8 +4,10 @@ release:
 templates:
 - charts/valkey/templates/deploy_valkey.yaml
 - charts/valkey/templates/statefulset.yaml
-# rendered only as an include dependency for the checksum/initconfig annotation
+# rendered only as include dependencies for the checksum/initconfig and
+# checksum/config annotations
 - charts/valkey/templates/init_config.yaml
+- charts/valkey/templates/configmap.yaml
 values:
 - ../values-subchart-overrides.yaml
 tests:
@@ -54,7 +56,7 @@ tests:
   asserts:
   - hasDocuments:
       count: 0
-- it: zeroes valkey cpu and memory requests for local
+- it: zeroes valkey cpu and memory requests and the cpu limit for local
   templates: *valkeyDeploymentTemplate
   values: *localValues
   documentSelector: *deploymentSelector
@@ -148,7 +150,7 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *valkeyVolumeClaimTemplatesAssert
-- it: zeroes metrics exporter cpu and memory requests for local
+- it: zeroes metrics exporter cpu and memory requests and the cpu limit for local
   templates: *valkeyDeploymentTemplate
   values: *localValues
   documentSelector: *deploymentSelector
@@ -187,7 +189,7 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *metricsExporterResourcesAssert
-- it: sets production-specific memory limits and requests for valkey
+- it: sets a production-specific memory limit and request for valkey
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
@@ -198,3 +200,50 @@ tests:
   - equal:
       path: *valkeyMemoryRequestPath
       value: 96Mi
+- it: sets a production-specific cpu request for valkey
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: *valkeyCpuRequestPath
+      value: 50m
+- it: sets a production-specific cpu limit for the metrics exporter
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: *metricsExporterCpuLimitPath
+      value: 250m
+- it: sets production-specific probe timeouts for valkey
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].startupProbe.timeoutSeconds
+      value: 5
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].livenessProbe.timeoutSeconds
+      value: 5
+- it: mounts the valkey config configmap into the init container for production
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: spec.template.spec.volumes[?(@.name == "valkey-config")].configMap.name
+      value: renovate-valkey-config
+  - equal:
+      path: spec.template.spec.initContainers[?(@.name == "renovate-valkey-init")].volumeMounts[?(@.name == "valkey-config")].mountPath
+      value: /usr/local/etc/valkey/valkey.conf
+- it: omits the valkey config configmap mount for development
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - notExists:
+      path: spec.template.spec.volumes[?(@.name == "valkey-config")]
+  - notExists:
+      path: spec.template.spec.initContainers[?(@.name == "renovate-valkey-init")].volumeMounts[?(@.name == "valkey-config")]

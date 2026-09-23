@@ -21,7 +21,7 @@ tests:
   - ../values-production.yaml
   asserts:
   - matchSnapshot: {}
-- it: zeroes renovate cpu and memory requests for local
+- it: zeroes renovate cpu and memory requests and the cpu limit for local
   values: *localValues
   asserts:
   - matchRegex:
@@ -54,7 +54,7 @@ tests:
 - it: sets non-zero renovate resource limits and requests for production
   values: *productionValues
   asserts: *renovateResourcesAssert
-- it: sets production-specific resource limits and requests for renovate
+- it: sets production-specific resource limits and memory request for renovate
   values: *productionValues
   asserts:
   - equal:
