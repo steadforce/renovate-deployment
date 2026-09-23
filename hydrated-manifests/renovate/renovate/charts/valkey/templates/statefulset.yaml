@@ -37,6 +37,7 @@ spec:
         app.kubernetes.io/instance: renovate
       annotations:
         checksum/initconfig: "287be78d8cad4753569dd71decf0fe4a"
+        checksum/config: "351408a5511a2fc356c435fd0bccaafd"
     spec:
       automountServiceAccountToken: false
       serviceAccountName: renovate-valkey
@@ -69,6 +70,9 @@ spec:
               mountPath: /data
             - name: scripts
               mountPath: /scripts
+            - name: valkey-config
+              mountPath: /usr/local/etc/valkey/valkey.conf
+              subPath: valkey.conf
       containers:
         - name: renovate-valkey
           image: docker.io/valkey/valkey:9.1.2
@@ -102,7 +106,7 @@ spec:
             failureThreshold: 3
             initialDelaySeconds: 0
             periodSeconds: 10
-            timeoutSeconds: 1
+            timeoutSeconds: 5
           startupProbe:
             exec:
               command:
@@ -111,13 +115,13 @@ spec:
             failureThreshold: 3
             initialDelaySeconds: 0
             periodSeconds: 10
-            timeoutSeconds: 1
+            timeoutSeconds: 5
           resources:
             limits:
               cpu: 300m
               memory: 128Mi
             requests:
-              cpu: 15m
+              cpu: 50m
               memory: 96Mi
           volumeMounts:
             - name: valkey-data
@@ -140,7 +144,7 @@ spec:
               port: metrics
           resources:
             limits:
-              cpu: 100m
+              cpu: 250m
               memory: 48Mi
             requests:
               cpu: 5m
@@ -153,3 +157,6 @@ spec:
           configMap:
             name: renovate-valkey-init-scripts
             defaultMode: 0555
+        - name: valkey-config
+          configMap:
+            name: renovate-valkey-config

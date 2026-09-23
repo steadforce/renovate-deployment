@@ -1,0 +1,15 @@
+---
+# Source: renovate/charts/valkey/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: renovate-valkey-config
+  labels:
+    helm.sh/chart: valkey-0.12.0
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/instance: renovate
+    app.kubernetes.io/version: "9.1.2"
+    app.kubernetes.io/managed-by: Helm
+data:
+  valkey.conf: |
+    save ""
