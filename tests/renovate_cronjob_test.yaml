@@ -54,6 +54,18 @@ tests:
 - it: ensure cronjob resource limits and requests for production renovate
   values: *productionValues
   asserts: *renovateResourcesAssert
+- it: sets production-specific resource limits and requests for renovate
+  values: *productionValues
+  asserts:
+  - equal:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.limits.cpu
+      value: 1500m
+  - equal:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.limits.memory
+      value: 1536Mi
+  - equal:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.requests.memory
+      value: 768Mi
 - it: ensure cronjob images for local renovate container
   values: *localValues
   asserts: &renovateImageAssert
