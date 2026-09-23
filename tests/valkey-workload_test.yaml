@@ -56,7 +56,7 @@ tests:
   asserts:
   - hasDocuments:
       count: 0
-- it: zeroes valkey cpu and memory requests for local
+- it: zeroes valkey cpu and memory requests and the cpu limit for local
   templates: *valkeyDeploymentTemplate
   values: *localValues
   documentSelector: *deploymentSelector
@@ -150,7 +150,7 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *valkeyVolumeClaimTemplatesAssert
-- it: zeroes metrics exporter cpu and memory requests for local
+- it: zeroes metrics exporter cpu and memory requests and the cpu limit for local
   templates: *valkeyDeploymentTemplate
   values: *localValues
   documentSelector: *deploymentSelector
@@ -189,7 +189,7 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *metricsExporterResourcesAssert
-- it: sets production-specific memory limits and requests for valkey
+- it: sets a production-specific memory limit and request for valkey
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector

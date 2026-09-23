@@ -16,7 +16,7 @@ tests:
   values:
   - ../values-development.yaml
   asserts: *valkeyConfigOmittedAssert
-- it: disables rdb snapshots for production
+- it: disables rdb snapshots in the valkey config configmap for production
   values:
   - ../values-production.yaml
   asserts:
