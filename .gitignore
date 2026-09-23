@@ -68,3 +68,6 @@ tests/__snapshot__/
 /test-output.xml
 /charts/
 /.secrets
+
+# Local-only files (e.g. kubeconfig.local with cluster credentials)
+*.local
