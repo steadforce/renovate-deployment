@@ -67,3 +67,4 @@ local.properties
 tests/__snapshot__/
 /test-output.xml
 /charts/
+/.secrets
