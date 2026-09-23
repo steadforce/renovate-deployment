@@ -1,0 +1,18 @@
+suite: valkey persistent volume claim
+release:
+  name: renovate
+templates:
+- charts/valkey/templates/pvc.yaml
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: requests a 100Mi nfs1 volume for local
+  values:
+  - ../values-local.yaml
+  asserts:
+  - equal:
+      path: spec.resources.requests.storage
+      value: 100Mi
+  - equal:
+      path: spec.storageClassName
+      value: nfs1

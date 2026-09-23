@@ -1,0 +1,26 @@
+suite: valkey metrics service
+release:
+  name: renovate
+templates:
+- charts/valkey/templates/metrics-svc.yaml
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: renders the valkey metrics service for local
+  values:
+  - ../values-local.yaml
+  asserts: &valkeyMetricsServiceAssert
+  - equal:
+      path: metadata.labels["app.kubernetes.io/component"]
+      value: metrics
+  - equal:
+      path: spec.ports[?(@.name == "metrics")].targetPort
+      value: metrics
+- it: renders the valkey metrics service for development
+  values:
+  - ../values-development.yaml
+  asserts: *valkeyMetricsServiceAssert
+- it: renders the valkey metrics service for production
+  values:
+  - ../values-production.yaml
+  asserts: *valkeyMetricsServiceAssert

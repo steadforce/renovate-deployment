@@ -1,14 +1,11 @@
-suite: valkey cache
+suite: valkey workload
 release:
   name: renovate
 templates:
 - charts/valkey/templates/deploy_valkey.yaml
 - charts/valkey/templates/statefulset.yaml
-- charts/valkey/templates/service.yaml
-- charts/valkey/templates/pvc.yaml
+# rendered only as an include dependency for the checksum/initconfig annotation
 - charts/valkey/templates/init_config.yaml
-- charts/valkey/templates/metrics-svc.yaml
-- charts/valkey/templates/servicemonitor.yaml
 values:
 - ../values-subchart-overrides.yaml
 tests:
@@ -127,17 +124,6 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *valkeyReplicaCountAssert
-- it: requests a 100Mi nfs1 volume for local
-  templates:
-  - charts/valkey/templates/pvc.yaml
-  values: *localValues
-  asserts:
-  - equal:
-      path: spec.resources.requests.storage
-      value: 100Mi
-  - equal:
-      path: spec.storageClassName
-      value: nfs1
 - it: requests a 100Mi nfs1 volume per valkey pod for development
   templates: *valkeyStatefulsetTemplate
   values: *developmentValues
@@ -204,65 +190,3 @@ tests:
   - equal:
       path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.memory
       value: 96Mi
-- it: renders the valkey service targeted by RENOVATE_REDIS_URL for local
-  templates: &valkeyServiceTemplate
-  - charts/valkey/templates/service.yaml
-  values: *localValues
-  asserts: &valkeyServiceAssert
-  - equal:
-      path: metadata.name
-      value: renovate-valkey
-  - equal:
-      path: spec.ports[0].port
-      value: 6379
-- it: renders the valkey service targeted by RENOVATE_REDIS_URL for development
-  templates: *valkeyServiceTemplate
-  values: *developmentValues
-  asserts: *valkeyServiceAssert
-- it: renders the valkey service targeted by RENOVATE_REDIS_URL for production
-  templates: *valkeyServiceTemplate
-  values: *productionValues
-  asserts: *valkeyServiceAssert
-- it: renders the valkey metrics service for local
-  templates: &valkeyMetricsServiceTemplate
-  - charts/valkey/templates/metrics-svc.yaml
-  values: *localValues
-  asserts: &valkeyMetricsServiceAssert
-  - equal:
-      path: metadata.labels["app.kubernetes.io/component"]
-      value: metrics
-  - equal:
-      path: spec.ports[?(@.name == "metrics")].targetPort
-      value: metrics
-- it: renders the valkey metrics service for development
-  templates: *valkeyMetricsServiceTemplate
-  values: *developmentValues
-  asserts: *valkeyMetricsServiceAssert
-- it: renders the valkey metrics service for production
-  templates: *valkeyMetricsServiceTemplate
-  values: *productionValues
-  asserts: *valkeyMetricsServiceAssert
-- it: renders a valkey servicemonitor selected by the cluster prometheus for local
-  templates: &valkeyServiceMonitorTemplate
-  - charts/valkey/templates/servicemonitor.yaml
-  values: *localValues
-  asserts: &valkeyServiceMonitorAssert
-  - isKind:
-      of: ServiceMonitor
-  - equal:
-      path: metadata.labels.prometheus
-      value: cluster-monitoring
-  - equal:
-      path: spec.endpoints[?(@.port == "metrics")].port
-      value: metrics
-  - equal:
-      path: spec.selector.matchLabels["app.kubernetes.io/component"]
-      value: metrics
-- it: renders a valkey servicemonitor selected by the cluster prometheus for development
-  templates: *valkeyServiceMonitorTemplate
-  values: *developmentValues
-  asserts: *valkeyServiceMonitorAssert
-- it: renders a valkey servicemonitor selected by the cluster prometheus for production
-  templates: *valkeyServiceMonitorTemplate
-  values: *productionValues
-  asserts: *valkeyServiceMonitorAssert

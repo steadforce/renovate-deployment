@@ -1,0 +1,31 @@
+suite: valkey servicemonitor
+release:
+  name: renovate
+templates:
+- charts/valkey/templates/servicemonitor.yaml
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: renders a valkey servicemonitor selected by the cluster prometheus for local
+  values:
+  - ../values-local.yaml
+  asserts: &valkeyServiceMonitorAssert
+  - isKind:
+      of: ServiceMonitor
+  - equal:
+      path: metadata.labels.prometheus
+      value: cluster-monitoring
+  - equal:
+      path: spec.endpoints[?(@.port == "metrics")].port
+      value: metrics
+  - equal:
+      path: spec.selector.matchLabels["app.kubernetes.io/component"]
+      value: metrics
+- it: renders a valkey servicemonitor selected by the cluster prometheus for development
+  values:
+  - ../values-development.yaml
+  asserts: *valkeyServiceMonitorAssert
+- it: renders a valkey servicemonitor selected by the cluster prometheus for production
+  values:
+  - ../values-production.yaml
+  asserts: *valkeyServiceMonitorAssert
