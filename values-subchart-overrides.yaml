@@ -1,6 +1,3 @@
-global:
-  security:
-    allowInsecureImages: true
 renovate:
   cronjob:
     activeDeadlineSeconds: 1200
@@ -11,33 +8,9 @@ renovate:
     schedule: '13 */1 * * *'
     successfulJobsHistoryLimit: 1
 
-  redis:
-    enabled: true
-    global:
-      storageClass: "nfs1"
-    image:
-      repository: bitnamilegacy/redis
-    master:
-      persistence:
-        size: 100Mi
-      resources:
-        limits:
-          cpu: 300m
-          memory: 48Mi
-        requests:
-          cpu: 15m
-          memory: 24Mi
-    replica:
-      persistence:
-        size: 100Mi
-      resources:
-        limits:
-          cpu: 300m
-          memory: 48Mi
-        requests:
-          cpu: 15m
-          memory: 24Mi
-    architecture: replication
+  env:
+    RENOVATE_REDIS_URL: redis://renovate-valkey
+
   resources:
     limits:
      cpu: 1000m
@@ -96,3 +69,32 @@ renovate:
       target:
         name: *name
     {{- end }}
+
+valkey:
+  replica:
+    enabled: true
+    replicas: 3
+    persistence:
+      size: 100Mi
+      storageClass: nfs1
+  resources:
+    limits:
+      cpu: 300m
+      memory: 48Mi
+    requests:
+      cpu: 15m
+      memory: 24Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      extraLabels:
+        prometheus: cluster-monitoring
+    exporter:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 48Mi
+        requests:
+          cpu: 5m
+          memory: 24Mi

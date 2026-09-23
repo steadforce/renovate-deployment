@@ -1,0 +1,25 @@
+suite: valkey service
+release:
+  name: renovate
+templates:
+- charts/valkey/templates/service.yaml
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: renders the valkey service targeted by RENOVATE_REDIS_URL for local
+  values:
+  - ../values-local.yaml
+  asserts: &valkeyServiceAssert
+  - equal:
+      path: metadata.name
+      value: renovate-valkey
+  - exists:
+      path: spec.ports[?(@.port == 6379)]
+- it: renders the valkey service targeted by RENOVATE_REDIS_URL for development
+  values:
+  - ../values-development.yaml
+  asserts: *valkeyServiceAssert
+- it: renders the valkey service targeted by RENOVATE_REDIS_URL for production
+  values:
+  - ../values-production.yaml
+  asserts: *valkeyServiceAssert

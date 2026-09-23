@@ -8,18 +8,31 @@ renovate:
   env:
     LOG_LEVEL: debug
 
-  redis:
-    architecture: standalone
-    master:
-      resources:
-        limits:
-         cpu: 0m
-        requests:
-         cpu: 0m
-         memory: 0Mi
   resources:
     limits:
      cpu: 0m
     requests:
      cpu: 0m
      memory: 0Mi
+
+valkey:
+  replica:
+    enabled: false
+  resources:
+    limits:
+      cpu: 0m
+    requests:
+      cpu: 0m
+      memory: 0Mi
+  dataStorage:
+    enabled: true
+    requestedSize: 100Mi
+    className: nfs1
+  metrics:
+    exporter:
+      resources:
+        limits:
+          cpu: 0m
+        requests:
+          cpu: 0m
+          memory: 0Mi

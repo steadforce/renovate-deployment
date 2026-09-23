@@ -6,6 +6,7 @@ environments:
   local:
     apis: &apis
     - external-secrets.io/v1/ExternalSecret
+    - monitoring.coreos.com/v1/ServiceMonitor
     valueFiles:
     - values-subchart-overrides.yaml
     - values-local.yaml

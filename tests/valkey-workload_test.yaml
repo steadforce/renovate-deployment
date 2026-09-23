@@ -1,0 +1,200 @@
+suite: valkey workload
+release:
+  name: renovate
+templates:
+- charts/valkey/templates/deploy_valkey.yaml
+- charts/valkey/templates/statefulset.yaml
+# rendered only as an include dependency for the checksum/initconfig annotation
+- charts/valkey/templates/init_config.yaml
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: matches the local valkey deployment snapshot
+  templates: &valkeyDeploymentTemplate
+  - charts/valkey/templates/deploy_valkey.yaml
+  values: &localValues
+  - ../values-local.yaml
+  documentSelector: &deploymentSelector
+    path: kind
+    value: Deployment
+  asserts:
+  - matchSnapshot: {}
+- it: matches the development valkey statefulset snapshot
+  templates: &valkeyStatefulsetTemplate
+  - charts/valkey/templates/statefulset.yaml
+  values: &developmentValues
+  - ../values-development.yaml
+  documentSelector: &statefulsetSelector
+    path: kind
+    value: StatefulSet
+  asserts:
+  - matchSnapshot: {}
+- it: matches the production valkey statefulset snapshot
+  templates: *valkeyStatefulsetTemplate
+  values: &productionValues
+  - ../values-production.yaml
+  documentSelector: *statefulsetSelector
+  asserts:
+  - matchSnapshot: {}
+- it: omits the valkey statefulset for local (standalone deployment)
+  templates: *valkeyStatefulsetTemplate
+  values: *localValues
+  asserts:
+  - hasDocuments:
+      count: 0
+- it: omits the valkey deployment for development (replicated statefulset)
+  templates: *valkeyDeploymentTemplate
+  values: *developmentValues
+  asserts:
+  - hasDocuments:
+      count: 0
+- it: omits the valkey deployment for production (replicated statefulset)
+  templates: *valkeyDeploymentTemplate
+  values: *productionValues
+  asserts:
+  - hasDocuments:
+      count: 0
+- it: zeroes valkey cpu and memory requests for local
+  templates: *valkeyDeploymentTemplate
+  values: *localValues
+  documentSelector: *deploymentSelector
+  asserts:
+  - matchRegex:
+      path: &valkeyCpuLimitPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.cpu
+      pattern: &localCpuPattern "^0(m)?$"
+  - matchRegex:
+      path: &valkeyMemoryLimitPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.memory
+      pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+  - matchRegex:
+      path: &valkeyCpuRequestPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.cpu
+      pattern: *localCpuPattern
+  - matchRegex:
+      path: &valkeyMemoryRequestPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.memory
+      pattern: &localMemoryPattern "^0(Ki|Mi|Gi)?$"
+- it: sets non-zero valkey resource limits and requests for development
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts: &valkeyResourcesAssert
+  - matchRegex:
+      path: *valkeyCpuLimitPath
+      pattern: &cpuPattern "^[1-9][0-9]*(m)?$"
+  - matchRegex:
+      path: *valkeyMemoryLimitPath
+      pattern: *memoryPattern
+  - matchRegex:
+      path: *valkeyCpuRequestPath
+      pattern: *cpuPattern
+  - matchRegex:
+      path: *valkeyMemoryRequestPath
+      pattern: *memoryPattern
+- it: sets non-zero valkey resource limits and requests for production
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts: *valkeyResourcesAssert
+- it: uses the docker.io valkey image for local
+  templates: *valkeyDeploymentTemplate
+  values: *localValues
+  documentSelector: *deploymentSelector
+  asserts: &valkeyImageAssert
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].image
+      pattern: "^docker.io/valkey/valkey:"
+- it: uses the docker.io valkey image for development
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts: *valkeyImageAssert
+- it: uses the docker.io valkey image for production
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts: *valkeyImageAssert
+- it: runs one valkey primary and three replicas for development
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts: &valkeyReplicaCountAssert
+  - equal:
+      path: spec.replicas
+      value: 4
+- it: runs one valkey primary and three replicas for production
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts: *valkeyReplicaCountAssert
+- it: mounts the renovate-valkey persistent volume claim for local
+  templates: *valkeyDeploymentTemplate
+  values: *localValues
+  documentSelector: *deploymentSelector
+  asserts:
+  - equal:
+      path: spec.template.spec.volumes[?(@.name == "valkey-data")].persistentVolumeClaim.claimName
+      value: renovate-valkey
+- it: requests a 100Mi nfs1 volume per valkey pod for development
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts: &valkeyVolumeClaimTemplatesAssert
+  - equal:
+      path: spec.volumeClaimTemplates[?(@.metadata.name == "valkey-data")].spec.resources.requests.storage
+      value: 100Mi
+  - equal:
+      path: spec.volumeClaimTemplates[?(@.metadata.name == "valkey-data")].spec.storageClassName
+      value: nfs1
+- it: requests a 100Mi nfs1 volume per valkey pod for production
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts: *valkeyVolumeClaimTemplatesAssert
+- it: zeroes metrics exporter cpu and memory requests for local
+  templates: *valkeyDeploymentTemplate
+  values: *localValues
+  documentSelector: *deploymentSelector
+  asserts:
+  - matchRegex:
+      path: &metricsExporterCpuLimitPath spec.template.spec.containers[?(@.name == "metrics")].resources.limits.cpu
+      pattern: *localCpuPattern
+  - matchRegex:
+      path: &metricsExporterMemoryLimitPath spec.template.spec.containers[?(@.name == "metrics")].resources.limits.memory
+      pattern: *memoryPattern
+  - matchRegex:
+      path: &metricsExporterCpuRequestPath spec.template.spec.containers[?(@.name == "metrics")].resources.requests.cpu
+      pattern: *localCpuPattern
+  - matchRegex:
+      path: &metricsExporterMemoryRequestPath spec.template.spec.containers[?(@.name == "metrics")].resources.requests.memory
+      pattern: *localMemoryPattern
+- it: sets non-zero metrics exporter resource limits and requests for development
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts: &metricsExporterResourcesAssert
+  - matchRegex:
+      path: *metricsExporterCpuLimitPath
+      pattern: *cpuPattern
+  - matchRegex:
+      path: *metricsExporterMemoryLimitPath
+      pattern: *memoryPattern
+  - matchRegex:
+      path: *metricsExporterCpuRequestPath
+      pattern: *cpuPattern
+  - matchRegex:
+      path: *metricsExporterMemoryRequestPath
+      pattern: *memoryPattern
+- it: sets non-zero metrics exporter resource limits and requests for production
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts: *metricsExporterResourcesAssert
+- it: sets production-specific memory limits and requests for valkey
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: *valkeyMemoryLimitPath
+      value: 128Mi
+  - equal:
+      path: *valkeyMemoryRequestPath
+      value: 96Mi

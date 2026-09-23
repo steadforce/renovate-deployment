@@ -7,23 +7,22 @@ values:
 - ../values-subchart-overrides.yaml
 tests:
 - it: matches the local renovate config configmap snapshot
-  values:
+  values: &localValues
   - ../values-local.yaml
   asserts:
   - matchSnapshot: {}
 - it: matches the development renovate config configmap snapshot
-  values:
+  values: &developmentValues
   - ../values-development.yaml
   asserts:
   - matchSnapshot: {}
 - it: matches the production renovate config configmap snapshot
-  values:
+  values: &productionValues
   - ../values-production.yaml
   asserts:
   - matchSnapshot: {}
-- it: renders the renovate config data for the local cluster
-  values:
-  - ../values-local.yaml
+- it: renders the renovate config data for local
+  values: *localValues
   asserts: &dataAssert
   - equal:
       path: data
@@ -56,11 +55,9 @@ tests:
                }
              ]
           }
-- it: renders the renovate config data for the development cluster
-  values:
-  - ../values-development.yaml
+- it: renders the renovate config data for development
+  values: *developmentValues
   asserts: *dataAssert
-- it: renders the renovate config data for the production cluster
-  values:
-  - ../values-production.yaml
+- it: renders the renovate config data for production
+  values: *productionValues
   asserts: *dataAssert
