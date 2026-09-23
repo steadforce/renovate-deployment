@@ -7,6 +7,7 @@ templates:
 - charts/valkey/templates/service.yaml
 - charts/valkey/templates/pvc.yaml
 - charts/valkey/templates/init_config.yaml
+- charts/valkey/templates/servicemonitor.yaml
 values:
 - ../values-subchart-overrides.yaml
 tests:
@@ -152,3 +153,57 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *valkeyVolumeClaimTemplatesAssert
+- it: ensure metrics exporter resource limits and requests for local valkey
+  templates: *valkeyDeploymentTemplate
+  values: *localValues
+  documentSelector: *deploymentSelector
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "metrics")].resources.limits.cpu
+      pattern: *localCpuPattern
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "metrics")].resources.limits.memory
+      pattern: *memoryPattern
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "metrics")].resources.requests.cpu
+      pattern: *localCpuPattern
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "metrics")].resources.requests.memory
+      pattern: "^0(Ki|Mi|Gi)?$"
+- it: ensure metrics exporter resource limits and requests for development valkey
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts: &metricsExporterResourcesAssert
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "metrics")].resources.limits.cpu
+      pattern: *cpuPattern
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "metrics")].resources.limits.memory
+      pattern: *memoryPattern
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "metrics")].resources.requests.cpu
+      pattern: *cpuPattern
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "metrics")].resources.requests.memory
+      pattern: *memoryPattern
+- it: ensure metrics exporter resource limits and requests for production valkey
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts: *metricsExporterResourcesAssert
+- it: ensure servicemonitor scrapes the valkey metrics service for all environments
+  templates:
+  - charts/valkey/templates/servicemonitor.yaml
+  asserts:
+  - isKind:
+      of: ServiceMonitor
+  - equal:
+      path: metadata.labels.prometheus
+      value: cluster-monitoring
+  - equal:
+      path: spec.endpoints[0].port
+      value: metrics
+  - equal:
+      path: spec.selector.matchLabels["app.kubernetes.io/component"]
+      value: metrics

@@ -84,3 +84,17 @@ valkey:
     requests:
       cpu: 15m
       memory: 24Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      extraLabels:
+        prometheus: cluster-monitoring
+    exporter:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 48Mi
+        requests:
+          cpu: 5m
+          memory: 24Mi
