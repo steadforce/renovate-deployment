@@ -227,3 +227,23 @@ tests:
   - equal:
       path: spec.template.spec.containers[?(@.name == "renovate-valkey")].livenessProbe.timeoutSeconds
       value: 5
+- it: mounts the valkey config configmap into the init container for production
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: spec.template.spec.volumes[?(@.name == "valkey-config")].configMap.name
+      value: renovate-valkey-config
+  - equal:
+      path: spec.template.spec.initContainers[?(@.name == "renovate-valkey-init")].volumeMounts[?(@.name == "valkey-config")].mountPath
+      value: /usr/local/etc/valkey/valkey.conf
+- it: omits the valkey config configmap mount for development
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - notExists:
+      path: spec.template.spec.volumes[?(@.name == "valkey-config")]
+  - notExists:
+      path: spec.template.spec.initContainers[?(@.name == "renovate-valkey-init")].volumeMounts[?(@.name == "valkey-config")]
