@@ -4,8 +4,10 @@ release:
 templates:
 - charts/valkey/templates/deploy_valkey.yaml
 - charts/valkey/templates/statefulset.yaml
-# rendered only as an include dependency for the checksum/initconfig annotation
+# rendered only as include dependencies for the checksum/initconfig and
+# checksum/config annotations
 - charts/valkey/templates/init_config.yaml
+- charts/valkey/templates/configmap.yaml
 values:
 - ../values-subchart-overrides.yaml
 tests:

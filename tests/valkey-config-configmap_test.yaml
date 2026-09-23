@@ -1,0 +1,28 @@
+suite: valkey config configmap
+release:
+  name: renovate
+templates:
+- charts/valkey/templates/configmap.yaml
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: omits the valkey config configmap for local
+  values:
+  - ../values-local.yaml
+  asserts: &valkeyConfigOmittedAssert
+  - hasDocuments:
+      count: 0
+- it: omits the valkey config configmap for development
+  values:
+  - ../values-development.yaml
+  asserts: *valkeyConfigOmittedAssert
+- it: disables rdb snapshots for production
+  values:
+  - ../values-production.yaml
+  asserts:
+  - equal:
+      path: metadata.name
+      value: renovate-valkey-config
+  - matchRegex:
+      path: data["valkey.conf"]
+      pattern: '(?m)^save ""$'

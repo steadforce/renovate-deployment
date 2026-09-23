@@ -11,6 +11,10 @@ renovate:
      memory: 768Mi
 
 valkey:
+  # Renovate's cache is disposable and replicas sync diskless, so skip RDB
+  # snapshots to keep valkey off the (sometimes slow) NFS volumes
+  valkeyConfig: |
+    save ""
   resources:
     limits:
       memory: 128Mi
