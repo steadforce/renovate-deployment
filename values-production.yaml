@@ -15,4 +15,10 @@ valkey:
     limits:
       memory: 128Mi
     requests:
+      cpu: 50m
       memory: 96Mi
+  metrics:
+    exporter:
+      resources:
+        limits:
+          cpu: 250m

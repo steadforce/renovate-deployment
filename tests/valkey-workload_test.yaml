@@ -198,3 +198,19 @@ tests:
   - equal:
       path: *valkeyMemoryRequestPath
       value: 96Mi
+- it: sets a production-specific cpu request for valkey
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: *valkeyCpuRequestPath
+      value: 50m
+- it: sets a production-specific cpu limit for the metrics exporter
+  templates: *valkeyStatefulsetTemplate
+  values: *productionValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: *metricsExporterCpuLimitPath
+      value: 250m
