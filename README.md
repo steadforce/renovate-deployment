@@ -12,6 +12,8 @@ environments.
 - Runs Renovate as a Kubernetes `CronJob`, backed by a `valkey` cache for faster repeat runs.
 - Renders Renovate's onboarding config into a `ConfigMap` that is mounted into the job.
 - Fetches the Gitea credentials used by Renovate through an `ExternalSecret`, scoped per environment.
+- Exposes Valkey metrics to the cluster Prometheus through a `redis_exporter` sidecar and a `ServiceMonitor`,
+  see [Monitoring](#monitoring).
 - Ships Helm unittest coverage for every rendered resource, see [Testing](#testing).
 
 ## Repository Structure
@@ -37,9 +39,38 @@ environments.
 
 | Environment | Value Files | Notable Overrides |
 | --- | --- | --- |
-| `local` | `values-subchart-overrides.yaml`, `values-local.yaml` | Zero resource requests, standalone Valkey (no replicas), 1-minute cronjob schedule, `LOG_LEVEL=debug`. |
-| `sf-k8s01-dev`, `sf-k8s02-dev` | `values-subchart-overrides.yaml`, `values-development.yaml` | Base resource limits, replicated Valkey (1 primary + 3 replicas). |
-| `sf-k8s01-prod` | `values-subchart-overrides.yaml`, `values-production.yaml` | Increased resource limits, 51-minute `activeDeadlineSeconds`. |
+| `local` | `values-subchart-overrides.yaml`, `values-local.yaml` | Zero CPU and memory requests, standalone Valkey on a `100Mi` `nfs1` PVC, 1-minute cronjob schedule, `LOG_LEVEL=debug`. |
+| `sf-k8s01-dev`, `sf-k8s02-dev` | `values-subchart-overrides.yaml`, `values-development.yaml` | Base resource limits, replicated Valkey (1 primary + 3 replicas, one `100Mi` `nfs1` volume per pod). |
+| `sf-k8s01-prod` | `values-subchart-overrides.yaml`, `values-production.yaml` | Increased Renovate resource limits, 51-minute `activeDeadlineSeconds`, `128Mi` Valkey memory limit. |
+
+> [!NOTE]
+> The Valkey chart has no separate resources for primary and replicas. Valkey `resources` apply to every pod of the
+> StatefulSet, so the replicated environments request them four times.
+
+## Monitoring
+
+With `valkey.metrics.enabled`, every Valkey pod runs a `redis_exporter` sidecar on port `9121`, exposed through the
+`renovate-valkey-metrics` Service. The `renovate-valkey` `ServiceMonitor` carries the label
+`prometheus: cluster-monitoring`, which the cluster Prometheus uses to discover scrape targets.
+
+To check the exporter from the workbench, first forward the metrics port (this blocks the terminal):
+
+```sh
+ kubectl get servicemonitor renovate-valkey \
+   -n renovate
+ kubectl port-forward svc/renovate-valkey-metrics 9121:9121 \
+   -n renovate
+```
+
+Then, in a second terminal:
+
+```sh
+ curl -s http://localhost:9121/metrics | grep '^redis_memory_used_bytes'
+```
+
+> [!TIP]
+> `redis_memory_used_bytes` against the container memory limit is the quickest way to tell whether Valkey is close to
+> being OOM killed.
 
 ## Prerequisites
 
@@ -143,4 +174,6 @@ All three call reusable workflows from
 
 - [Renovate documentation](https://docs.renovatebot.com/)
 - [Renovate Helm chart](https://github.com/renovatebot/helm-charts/tree/main/charts/renovate)
+- [Valkey Helm chart](https://github.com/valkey-io/valkey-helm)
+- [redis_exporter](https://github.com/oliver006/redis_exporter)
 - [Helm chart dependencies](https://helm.sh/docs/topics/charts/#chart-dependencies)
