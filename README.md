@@ -9,18 +9,21 @@ environments.
 
 ## Overview
 
-- Runs Renovate as a Kubernetes `CronJob`, backed by a `valkey` cache for faster repeat runs.
+- Runs Renovate as a Kubernetes `CronJob` every hour at minute 13, backed by a `valkey` cache for faster repeat runs.
 - Renders Renovate's onboarding config into a `ConfigMap` that is mounted into the job.
 - Fetches the Gitea credentials used by Renovate through an `ExternalSecret`, scoped per environment.
 - Exposes Valkey metrics to the cluster Prometheus through a `redis_exporter` sidecar and a `ServiceMonitor`,
   see [Monitoring](#monitoring).
 - Ships Helm unittest coverage for every rendered resource, see [Testing](#testing).
+- Hydrates the manifests of every environment into pull requests for ArgoCD, see
+  [Continuous Integration](#continuous-integration).
 
 ## Repository Structure
 
 | File / Directory | Purpose |
 | --- | --- |
-| `Chart.yaml` | Declares the pinned `renovate` and `valkey` chart dependencies for this umbrella chart. |
+| `Chart.yaml` | Declares the `renovate` and `valkey` chart dependencies for this umbrella chart. |
+| `Chart.lock` | Pins the resolved dependency versions, so local and CI builds render the same manifests. |
 | `values-subchart-overrides.yaml` | Overrides for the `renovate` and `valkey` chart dependencies. |
 | `values-local.yaml`, `values-development.yaml`, `values-production.yaml` | Per-environment value overrides. |
 | `helm-config.yaml` | Maps each cluster environment to its `valueFiles` and required Kubernetes `apis`. |
@@ -47,6 +50,115 @@ environments.
 > The Valkey chart has no separate resources for primary and replicas. Valkey `resources` apply to every pod of the
 > StatefulSet, so the replicated environments request them four times.
 
+## Prerequisites
+
+Commands below assume the `SteadOps-Steadies-K8s-Workplace` workbench, which ships `helm`, `yq`, `kubectl`,
+`hetzner-k3s`, and `act` pre-installed. Dependency, testing, and rendering commands also have a containerized
+alternative for running outside the workbench.
+
+## Fetch Chart Dependencies
+
+Download the subchart archives pinned in `Chart.lock` into the git-ignored `charts/` folder before testing or
+rendering. `helm dependency build` resolves repositories by name, so every repository from `Chart.yaml` is added
+first, as the hydration workflow does.
+
+In the workbench:
+
+```sh
+ yq -N -r 'explode(.) | .dependencies[] | [.name, .repository] | @tsv' Chart.yaml |
+   while read -r name url; do
+     helm repo add "$name" "$url" \
+       --force-update
+   done
+ helm dependency build .
+```
+
+Without the workbench:
+
+```sh
+ docker run \
+   -e HOME=/tmp \
+   --entrypoint sh \
+   --rm \
+   -u $(id -u) \
+   -v "$(pwd):/apps" \
+   -w /apps \
+   alpine/helm -c '
+     helm repo add renovate https://docs.renovatebot.com/helm-charts/ --force-update
+     helm repo add valkey https://valkey.io/valkey-helm/ --force-update
+     helm dependency build .
+   '
+```
+
+> [!TIP]
+> Renovate keeps `Chart.yaml` and `Chart.lock` in sync. When changing a dependency by hand, run
+> `helm dependency update .` instead and commit the regenerated `Chart.lock`: hydration fails when the two disagree.
+
+## Testing
+
+### Run Helm Unittests
+
+After [fetching the chart dependencies](#fetch-chart-dependencies):
+
+```sh
+ docker run \
+   -e HELM_CACHE_HOME=/tmp/helm/.config \
+   --rm \
+   -u $(id -u) \
+   -v "$(pwd):/apps" \
+   -w /apps \
+   helmunittest/helm-unittest \
+   .
+```
+
+> [!TIP]
+> Add `-o test-output.xml` after `helmunittest/helm-unittest` to also produce a JUnit report.
+
+### Render All Manifests Locally
+
+After [fetching the chart dependencies](#fetch-chart-dependencies), in the workbench:
+
+```sh
+ for cluster in $(yq '.environments | keys[]' helm-config.yaml); do
+   helm template \
+     -a "$(cluster=$cluster yq '.environments.[env(cluster)].apis | @csv' helm-config.yaml)" \
+     -f "$(cluster=$cluster yq '.environments.[env(cluster)].valueFiles | @csv' helm-config.yaml)" \
+     --include-crds \
+     -n "$(yq 'explode(.) | .namespace // ""' helm-config.yaml)" \
+     --output-dir "_local/$cluster" \
+     --release-name "$(yq 'explode(.) | .releaseName // ""' helm-config.yaml)" \
+     --skip-tests \
+     .
+ done
+```
+
+Rendered manifests are written to `_local/<cluster>/`, which is git-ignored.
+
+### Render All Manifests Locally Without the Workbench
+
+```sh
+ docker run \
+   -e HOME=/tmp \
+   --entrypoint sh \
+   --rm \
+   -u $(id -u) \
+   -v "$(pwd):/apps" \
+   -w /apps \
+   ghcr.io/steadforce/steadops/workbenches/k8s:main -c '
+     for cluster in $(yq ".environments | keys[]" helm-config.yaml); do
+       helm template \
+         -a "$(cluster=$cluster yq ".environments.[env(cluster)].apis | @csv" helm-config.yaml)" \
+         -f "$(cluster=$cluster yq ".environments.[env(cluster)].valueFiles | @csv" helm-config.yaml)" \
+         --include-crds \
+         -n "$(yq "explode(.) | .namespace // \"\"" helm-config.yaml)" \
+         --output-dir "_local/$cluster" \
+         --release-name "$(yq "explode(.) | .releaseName // \"\"" helm-config.yaml)" \
+         --skip-tests \
+         .
+     done
+   '
+```
+
 ## Monitoring
 
 With `valkey.metrics.enabled`, every Valkey pod runs a `redis_exporter` sidecar on port `9121`, exposed through the
@@ -72,84 +184,6 @@ Then, in a second terminal:
 > `redis_memory_used_bytes` against the container memory limit is the quickest way to tell whether Valkey is close to
 > being OOM killed.
 
-## Prerequisites
-
-Commands below assume the `SteadOps-Steadies-K8s-Workplace` workbench, which ships `helm`, `yq`, `kubectl`,
-`hetzner-k3s`, and `act` pre-installed. Each section also lists a containerized alternative for running outside
-the workbench.
-
-## Testing
-
-### Run Helm Unittests
-
-```sh
- helm dependency update .
- docker run \
-   -e HELM_CACHE_HOME=/tmp/helm/.config \
-   --rm \
-   -u $(id -u) \
-   -v "$(pwd):/apps" \
-   -w /apps \
-   helmunittest/helm-unittest \
-   .
-```
-
-> [!TIP]
-> Add `-o test-output.xml` after `helmunittest/helm-unittest` to also produce a JUnit report.
-
-### Render All Manifests Locally
-
-In the workbench:
-
-```sh
- helm dependency update .
- for cluster in $(yq '.environments | keys[]' helm-config.yaml); do
-   helm template \
-     -a "$(cluster=$cluster yq '.environments.[env(cluster)].apis | @csv' helm-config.yaml)" \
-     -f "$(cluster=$cluster yq '.environments.[env(cluster)].valueFiles | @csv' helm-config.yaml)" \
-     --include-crds \
-     -n "$(yq 'explode(.) | .namespace // ""' helm-config.yaml)" \
-     --output-dir "_local/$cluster" \
-     --release-name "$(yq 'explode(.) | .releaseName // ""' helm-config.yaml)" \
-     --skip-tests \
-     .
- done
-```
-
-Rendered manifests are written to `_local/<cluster>/`, which is git-ignored.
-
-### Render All Manifests Locally Without the Workbench
-
-```sh
- docker run \
-   -e HOME=/tmp \
-   --rm \
-   -u $(id -u) \
-   -v "$(pwd):/apps" \
-   -w /apps \
-   alpine/helm dependency update .
- docker run \
-   -e HOME=/tmp \
-   --entrypoint sh \
-   --rm \
-   -u $(id -u) \
-   -v "$(pwd):/apps" \
-   -w /apps \
-   ghcr.io/steadforce/steadops/workbenches/k8s:main -c '
-     for cluster in $(yq ".environments | keys[]" helm-config.yaml); do
-       helm template \
-         -a "$(cluster=$cluster yq ".environments.[env(cluster)].apis | @csv" helm-config.yaml)" \
-         -f "$(cluster=$cluster yq ".environments.[env(cluster)].valueFiles | @csv" helm-config.yaml)" \
-         --include-crds \
-         -n "$(yq "explode(.) | .namespace // \"\"" helm-config.yaml)" \
-         --output-dir "_local/$cluster" \
-         --release-name "$(yq "explode(.) | .releaseName // \"\"" helm-config.yaml)" \
-         --skip-tests \
-         .
-     done
-   '
-```
-
 ## Run GitHub Workflows Locally
 
 In the workbench, from the folder containing this `README.md`:
@@ -161,14 +195,30 @@ In the workbench, from the folder containing this `README.md`:
 On first execution you are asked which flavour of the `act` image to use. The default `medium` is a good starting
 point.
 
+`act` reads workflow secrets, such as `STEADOPS_HELM_RENOVATION_MS_TEAMS_WEBHOOK`, from a `.secrets` file in
+`KEY=value` format. The file is git-ignored.
+
+> [!NOTE]
+> The hydration workflow skips opening pull requests under `act`, so a local run only renders the manifests.
+
 ## Continuous Integration
 
 - `helm-unittest.yaml` runs the Helm unittest suite on every push and reports results to Microsoft Teams.
-- `helm-hydration.yaml` renders manifests for every environment in `helm-config.yaml` on pushes to `main`.
+- `helm-hydration.yaml` renders manifests for every environment in `helm-config.yaml` on pushes to `main` and on
+  demand. It opens one pull request per environment against the `environments/<env>` branch watched by ArgoCD.
 - `trufflehog.yaml` scans the repository for leaked secrets on pushes and pull requests to `main`, and on demand.
 
 All three call reusable workflows from
 [`steadforce/steadops-workflows`](https://github.com/steadforce/steadops-workflows).
+
+### Hydrate a Branch Manually
+
+Open **Actions > Helm hydration > Run workflow**, pick the branch under **Use workflow from**, and start the run.
+
+> [!WARNING]
+> A manual run opens real pull requests against the `environments/<env>` branches. The pull request branch is named
+> after the environment and chart version only, so a branch with the same chart version as `main` updates the same
+> pull request and replaces its manifests.
 
 ## Resources
 
