@@ -60,33 +60,33 @@ tests:
   documentSelector: *deploymentSelector
   asserts:
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.cpu
+      path: &valkeyCpuLimitPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.cpu
       pattern: &localCpuPattern "^0(m)?$"
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.memory
-      pattern: "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+      path: &valkeyMemoryLimitPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.memory
+      pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.cpu
+      path: &valkeyCpuRequestPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.cpu
       pattern: *localCpuPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.memory
-      pattern: "^0(Ki|Mi|Gi)?$"
+      path: &valkeyMemoryRequestPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.memory
+      pattern: &localMemoryPattern "^0(Ki|Mi|Gi)?$"
 - it: sets non-zero valkey resource limits and requests for development
   templates: *valkeyStatefulsetTemplate
   values: *developmentValues
   documentSelector: *statefulsetSelector
   asserts: &valkeyResourcesAssert
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.cpu
+      path: *valkeyCpuLimitPath
       pattern: &cpuPattern "^[1-9][0-9]*(m)?$"
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.memory
-      pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+      path: *valkeyMemoryLimitPath
+      pattern: *memoryPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.cpu
+      path: *valkeyCpuRequestPath
       pattern: *cpuPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.memory
+      path: *valkeyMemoryRequestPath
       pattern: *memoryPattern
 - it: sets non-zero valkey resource limits and requests for production
   templates: *valkeyStatefulsetTemplate
@@ -154,33 +154,33 @@ tests:
   documentSelector: *deploymentSelector
   asserts:
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "metrics")].resources.limits.cpu
+      path: &metricsExporterCpuLimitPath spec.template.spec.containers[?(@.name == "metrics")].resources.limits.cpu
       pattern: *localCpuPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "metrics")].resources.limits.memory
+      path: &metricsExporterMemoryLimitPath spec.template.spec.containers[?(@.name == "metrics")].resources.limits.memory
       pattern: *memoryPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "metrics")].resources.requests.cpu
+      path: &metricsExporterCpuRequestPath spec.template.spec.containers[?(@.name == "metrics")].resources.requests.cpu
       pattern: *localCpuPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "metrics")].resources.requests.memory
-      pattern: "^0(Ki|Mi|Gi)?$"
+      path: &metricsExporterMemoryRequestPath spec.template.spec.containers[?(@.name == "metrics")].resources.requests.memory
+      pattern: *localMemoryPattern
 - it: sets non-zero metrics exporter resource limits and requests for development
   templates: *valkeyStatefulsetTemplate
   values: *developmentValues
   documentSelector: *statefulsetSelector
   asserts: &metricsExporterResourcesAssert
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "metrics")].resources.limits.cpu
+      path: *metricsExporterCpuLimitPath
       pattern: *cpuPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "metrics")].resources.limits.memory
+      path: *metricsExporterMemoryLimitPath
       pattern: *memoryPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "metrics")].resources.requests.cpu
+      path: *metricsExporterCpuRequestPath
       pattern: *cpuPattern
   - matchRegex:
-      path: spec.template.spec.containers[?(@.name == "metrics")].resources.requests.memory
+      path: *metricsExporterMemoryRequestPath
       pattern: *memoryPattern
 - it: sets non-zero metrics exporter resource limits and requests for production
   templates: *valkeyStatefulsetTemplate
@@ -193,8 +193,8 @@ tests:
   documentSelector: *statefulsetSelector
   asserts:
   - equal:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.memory
+      path: *valkeyMemoryLimitPath
       value: 128Mi
   - equal:
-      path: spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.memory
+      path: *valkeyMemoryRequestPath
       value: 96Mi
