@@ -21,7 +21,7 @@ tests:
   - ../values-production.yaml
   asserts:
   - matchSnapshot: {}
-- it: ensure cronjob resource limits and requests for local renovate
+- it: zeroes renovate cpu and memory requests for local
   values: *localValues
   asserts:
   - matchRegex:
@@ -36,7 +36,7 @@ tests:
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
       pattern: "^0(Ki|Mi|Gi)?$"
-- it: ensure cronjob resource limits and requests for development renovate
+- it: sets non-zero renovate resource limits and requests for development
   values: *developmentValues
   asserts: &renovateResourcesAssert
   - matchRegex:
@@ -51,7 +51,7 @@ tests:
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[*].resources.requests.memory
       pattern: *memoryPattern
-- it: ensure cronjob resource limits and requests for production renovate
+- it: sets non-zero renovate resource limits and requests for production
   values: *productionValues
   asserts: *renovateResourcesAssert
 - it: sets production-specific resource limits and requests for renovate
@@ -66,109 +66,109 @@ tests:
   - equal:
       path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.requests.memory
       value: 768Mi
-- it: ensure cronjob images for local renovate container
+- it: uses the ghcr.io renovate image for local
   values: *localValues
   asserts: &renovateImageAssert
   - matchRegex:
       path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].image
       pattern: "^ghcr.io/renovatebot/renovate:"
-- it: ensure cronjob images for development renovate container
+- it: uses the ghcr.io renovate image for development
   values: *developmentValues
   asserts: *renovateImageAssert
-- it: ensure cronjob images for production renovate container
+- it: uses the ghcr.io renovate image for production
   values: *productionValues
   asserts: *renovateImageAssert
-- it: ensure local cronjob schedule
+- it: runs the cronjob every minute for local
   values: *localValues
   asserts:
   - equal:
       path: spec.schedule
       value: "*/1 * * * *"
-- it: ensure development cronjob schedule
+- it: runs the cronjob hourly at minute 13 for development
   values: *developmentValues
   asserts: &renovateScheduleAssert
   - equal:
       path: spec.schedule
       value: "13 */1 * * *"
-- it: ensure production cronjob schedule
+- it: runs the cronjob hourly at minute 13 for production
   values: *productionValues
   asserts: *renovateScheduleAssert
-- it: ensure local cronjob activeDeadlineSeconds
+- it: sets activeDeadlineSeconds to 1200 for local
   values: *localValues
   asserts: &renovateActiveDeadlineSecondsAssert
   - equal:
       path: spec.jobTemplate.spec.activeDeadlineSeconds
       value: 1200
-- it: ensure development cronjob activeDeadlineSeconds
+- it: sets activeDeadlineSeconds to 1200 for development
   values: *developmentValues
   asserts: *renovateActiveDeadlineSecondsAssert
-- it: ensure production cronjob activeDeadlineSeconds
+- it: sets activeDeadlineSeconds to 3060 for production
   values: *productionValues
   asserts:
   - equal:
       path: spec.jobTemplate.spec.activeDeadlineSeconds
       value: 3060
-- it: ensure local cronjob concurrencyPolicy
+- it: forbids concurrent cronjob runs for local
   values: *localValues
   asserts: &renovateConcurrencyPolicyAssert
   - equal:
       path: spec.concurrencyPolicy
       value: Forbid
-- it: ensure development cronjob concurrencyPolicy
+- it: forbids concurrent cronjob runs for development
   values: *developmentValues
   asserts: *renovateConcurrencyPolicyAssert
-- it: ensure production cronjob concurrencyPolicy
+- it: forbids concurrent cronjob runs for production
   values: *productionValues
   asserts: *renovateConcurrencyPolicyAssert
-- it: ensure local cronjob failedJobsHistoryLimit
+- it: keeps two failed jobs for local
   values: *localValues
   asserts: &renovateFailedJobsHistoryLimitAssert
   - equal:
       path: spec.failedJobsHistoryLimit
       value: 2
-- it: ensure development cronjob failedJobsHistoryLimit
+- it: keeps two failed jobs for development
   values: *developmentValues
   asserts: *renovateFailedJobsHistoryLimitAssert
-- it: ensure production cronjob failedJobsHistoryLimit
+- it: keeps two failed jobs for production
   values: *productionValues
   asserts: *renovateFailedJobsHistoryLimitAssert
-- it: ensure local cronjob jobBackoffLimit
+- it: retries failed jobs three times for local
   values: *localValues
   asserts: &renovateJobBackoffLimitAssert
   - equal:
       path: spec.jobTemplate.spec.backoffLimit
       value: 3
-- it: ensure development cronjob jobBackoffLimit
+- it: retries failed jobs three times for development
   values: *developmentValues
   asserts: *renovateJobBackoffLimitAssert
-- it: ensure production cronjob jobBackoffLimit
+- it: retries failed jobs three times for production
   values: *productionValues
   asserts: *renovateJobBackoffLimitAssert
-- it: ensure local cronjob jobRestartPolicy
+- it: never restarts job pods for local
   values: *localValues
   asserts: &renovateJobRestartPolicyAssert
   - equal:
       path: spec.jobTemplate.spec.template.spec.restartPolicy
       value: Never
-- it: ensure development cronjob jobRestartPolicy
+- it: never restarts job pods for development
   values: *developmentValues
   asserts: *renovateJobRestartPolicyAssert
-- it: ensure production cronjob jobRestartPolicy
+- it: never restarts job pods for production
   values: *productionValues
   asserts: *renovateJobRestartPolicyAssert
-- it: ensure local cronjob successfulJobsHistoryLimit
+- it: keeps one successful job for local
   values: *localValues
   asserts: &renovateSuccessfulJobsHistoryLimitAssert
   - equal:
       path: spec.successfulJobsHistoryLimit
       value: 1
-- it: ensure development cronjob successfulJobsHistoryLimit
+- it: keeps one successful job for development
   values: *developmentValues
   asserts: *renovateSuccessfulJobsHistoryLimitAssert
-- it: ensure production cronjob successfulJobsHistoryLimit
+- it: keeps one successful job for production
   values: *productionValues
   asserts: *renovateSuccessfulJobsHistoryLimitAssert
-- it: ensure local cronjob uses envFrom renovate-environment secret for environment variables
+- it: loads env from the renovate-environment secret for local
   values: *localValues
   asserts: &renovateEnvFromAssert
   - equal:
@@ -176,35 +176,35 @@ tests:
       value:
         - secretRef:
             name: renovate-environment
-- it: ensure development cronjob uses envFrom renovate-environment secret for environment variables
+- it: loads env from the renovate-environment secret for development
   values: *developmentValues
   asserts: *renovateEnvFromAssert
-- it: ensure production cronjob uses envFrom renovate-environment secret for environment variables
+- it: loads env from the renovate-environment secret for production
   values: *productionValues
   asserts: *renovateEnvFromAssert
-- it: ensure local cronjob container connects to the Valkey cache
+- it: sets RENOVATE_REDIS_URL to the valkey service for local
   values: *localValues
   asserts: &renovateRedisUrlEnvAssert
   - equal:
       path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env[?(@.name == "RENOVATE_REDIS_URL")].value
       value: redis://renovate-valkey
-- it: ensure development cronjob container connects to the Valkey cache
+- it: sets RENOVATE_REDIS_URL to the valkey service for development
   values: *developmentValues
   asserts: *renovateRedisUrlEnvAssert
-- it: ensure production cronjob container connects to the Valkey cache
+- it: sets RENOVATE_REDIS_URL to the valkey service for production
   values: *productionValues
   asserts: *renovateRedisUrlEnvAssert
-- it: ensure local cronjob container sets LOG_LEVEL to debug
+- it: sets LOG_LEVEL to debug for local
   values: *localValues
   asserts:
   - equal:
       path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env[?(@.name == "LOG_LEVEL")].value
       value: debug
-- it: ensure development cronjob container omits the LOG_LEVEL override
+- it: omits the LOG_LEVEL override for development
   values: *developmentValues
   asserts: &renovateLogLevelOmittedAssert
   - notExists:
       path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env[?(@.name == "LOG_LEVEL")]
-- it: ensure production cronjob container omits the LOG_LEVEL override
+- it: omits the LOG_LEVEL override for production
   values: *productionValues
   asserts: *renovateLogLevelOmittedAssert

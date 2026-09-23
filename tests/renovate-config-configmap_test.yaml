@@ -21,7 +21,7 @@ tests:
   - ../values-production.yaml
   asserts:
   - matchSnapshot: {}
-- it: renders the renovate config data for the local cluster
+- it: renders the renovate config data for local
   values:
   - ../values-local.yaml
   asserts: &dataAssert
@@ -56,11 +56,11 @@ tests:
                }
              ]
           }
-- it: renders the renovate config data for the development cluster
+- it: renders the renovate config data for development
   values:
   - ../values-development.yaml
   asserts: *dataAssert
-- it: renders the renovate config data for the production cluster
+- it: renders the renovate config data for production
   values:
   - ../values-production.yaml
   asserts: *dataAssert
