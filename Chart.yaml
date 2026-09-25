@@ -3,7 +3,7 @@ name: &name renovate
 version: 1.0.0
 dependencies:
 - name: *name
-  version: 46.321.2
+  version: 46.321.4
   repository: https://docs.renovatebot.com/helm-charts/
 - name: valkey
   version: 0.12.0
