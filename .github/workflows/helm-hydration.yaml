@@ -13,4 +13,4 @@ permissions:
 
 jobs:
   hydration:
-    uses: steadforce/steadops-workflows/.github/workflows/helm-hydration.yaml@v4.0.1
+    uses: steadforce/steadops-workflows/.github/workflows/helm-hydration.yaml@v4.1.0
