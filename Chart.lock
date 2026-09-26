@@ -1,9 +1,9 @@
 dependencies:
 - name: renovate
   repository: https://docs.renovatebot.com/helm-charts/
-  version: 46.321.4
+  version: 46.321.9
 - name: valkey
   repository: https://valkey.io/valkey-helm/
   version: 0.12.0
-digest: sha256:772b0949aec67e2c67b96300462febd56039eb7038ef5574da47e2177f514fb5
-generated: "2026-09-25T11:11:59.853883136Z"
+digest: sha256:1e6192f436b62979e9ee945ee3b090f103b7ed4de3c780aa95864dc4410e746b
+generated: "2026-09-26T03:43:48.222668718Z"
