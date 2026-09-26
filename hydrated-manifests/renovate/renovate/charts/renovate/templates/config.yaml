@@ -6,10 +6,10 @@ metadata:
   name: renovate-config
   namespace: renovate
   labels:
-    helm.sh/chart: renovate-46.317.1
+    helm.sh/chart: renovate-46.321.9
     app.kubernetes.io/name: renovate
     app.kubernetes.io/instance: renovate
-    app.kubernetes.io/version: "44.111.3"
+    app.kubernetes.io/version: "44.115.10"
     app.kubernetes.io/managed-by: Helm
 data:
   config.json: |-
