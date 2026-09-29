@@ -38,13 +38,23 @@ environments.
 
 ## Environments
 
-`helm-config.yaml` is consumed by the pipeline hydration step to render manifests for each cluster.
+`helm-config.yaml` is consumed by the pipeline hydration step to render manifests for each cluster. Every
+environment renders `values-subchart-overrides.yaml` first, then its own value file.
 
-| Environment | Value Files | Notable Overrides |
-| --- | --- | --- |
-| `local` | `values-subchart-overrides.yaml`, `values-local.yaml` | Zero CPU and memory requests, standalone Valkey on a `100Mi` `nfs1` PVC, 1-minute cronjob schedule, `LOG_LEVEL=debug`. |
-| `sf-k8s01-dev`, `sf-k8s02-dev` | `values-subchart-overrides.yaml`, `values-development.yaml` | Base resource limits, replicated Valkey (1 primary + 3 replicas, one `100Mi` `nfs1` volume per pod). |
-| `sf-k8s01-prod` | `values-subchart-overrides.yaml`, `values-production.yaml` | Increased Renovate resource limits, 51-minute `activeDeadlineSeconds`, `128Mi` Valkey memory limit. |
+| Environment | Value Files |
+| --- | --- |
+| `local` | `values-subchart-overrides.yaml`, `values-local.yaml` |
+| `sf-k8s01-dev`, `sf-k8s02-dev` | `values-subchart-overrides.yaml`, `values-development.yaml` |
+| `sf-k8s01-prod` | `values-subchart-overrides.yaml`, `values-production.yaml` |
+
+Notable overrides per environment:
+
+- `local`: zero CPU and memory requests, standalone Valkey on a `100Mi` `nfs1` PVC, 1-minute cronjob schedule,
+  `LOG_LEVEL=debug`.
+- `sf-k8s01-dev`, `sf-k8s02-dev`: base resource limits, replicated Valkey (1 primary + 3 replicas, one `100Mi`
+  `nfs1` volume per pod).
+- `sf-k8s01-prod`: increased Renovate resource limits, 51-minute `activeDeadlineSeconds`, `128Mi` Valkey memory
+  limit, and no Valkey RDB snapshots.
 
 > [!NOTE]
 > The Valkey chart has no separate resources for primary and replicas. Valkey `resources` apply to every pod of the
@@ -58,18 +68,15 @@ alternative for running outside the workbench.
 
 ## Fetch Chart Dependencies
 
-Download the subchart archives pinned in `Chart.lock` into the git-ignored `charts/` folder before testing or
-rendering. `helm dependency build` resolves repositories by name, so every repository from `Chart.yaml` is added
-first, as the hydration workflow does.
+All commands run from the repository root. Download the subchart archives pinned in `Chart.lock` into the
+git-ignored `charts/` folder after cloning, and after every pull that changes `Chart.lock`. `helm dependency build`
+resolves repositories by name, so every `http(s)` repository from `Chart.yaml` is added first, as the pipeline does.
 
 In the workbench:
 
 ```sh
- yq -N -r 'explode(.) | .dependencies[] | [.name, .repository] | @tsv' Chart.yaml |
-   while read -r name url; do
-     helm repo add "$name" "$url" \
-       --force-update
-   done
+ yq 'explode(.) | .dependencies[] | select(.repository == "http*") | .name + " " + .repository' Chart.yaml |
+   while read -r name repo; do helm repo add --force-update "$name" "$repo"; done
  helm dependency build .
 ```
 
@@ -84,15 +91,11 @@ Without the workbench:
    -v "$(pwd):/apps" \
    -w /apps \
    alpine/helm -c '
-     helm repo add renovate https://docs.renovatebot.com/helm-charts/ --force-update
-     helm repo add valkey https://valkey.io/valkey-helm/ --force-update
+     yq "explode(.) | .dependencies[] | select(.repository == \"http*\") | .name + \" \" + .repository" Chart.yaml |
+       while read -r name repo; do helm repo add --force-update "$name" "$repo"; done &&
      helm dependency build .
    '
 ```
-
-> [!TIP]
-> Renovate keeps `Chart.yaml` and `Chart.lock` in sync. When changing a dependency by hand, run
-> `helm dependency update .` instead and commit the regenerated `Chart.lock`: hydration fails when the two disagree.
 
 ## Testing
 
@@ -112,29 +115,34 @@ After [fetching the chart dependencies](#fetch-chart-dependencies):
 ```
 
 > [!TIP]
-> Add `-o test-output.xml` after `helmunittest/helm-unittest` to also produce a JUnit report.
+> Add `-t JUnit -o test-output.xml` after `helmunittest/helm-unittest` to also write a JUnit report, as the pipeline
+> does. Without `-t`, helm-unittest writes the report in XUnit format.
 
 ### Render All Manifests Locally
 
 After [fetching the chart dependencies](#fetch-chart-dependencies), in the workbench:
 
 ```sh
- for cluster in $(yq '.environments | keys[]' helm-config.yaml); do
+ for cluster in $(yq 'explode(.) | .environments | keys[]' helm-config.yaml); do
    helm template \
-     -a "$(cluster=$cluster yq '.environments.[env(cluster)].apis | @csv' helm-config.yaml)" \
-     -f "$(cluster=$cluster yq '.environments.[env(cluster)].valueFiles | @csv' helm-config.yaml)" \
+     -a "$(cluster=$cluster yq 'explode(.) | .environments.[env(cluster)].apis // [] | @csv' helm-config.yaml)" \
+     -f "$(cluster=$cluster yq 'explode(.) | .environments.[env(cluster)].valueFiles // [] | @csv' helm-config.yaml)" \
      --include-crds \
-     -n "$(yq 'explode(.) | .namespace // ""' helm-config.yaml)" \
+     -n "$(yq 'explode(.) | .namespace' helm-config.yaml)" \
      --output-dir "_local/$cluster" \
-     --release-name "$(yq 'explode(.) | .releaseName // ""' helm-config.yaml)" \
+     --release-name \
      --skip-tests \
+     "$(yq 'explode(.) | .releaseName' helm-config.yaml)" \
      .
  done
 ```
 
-Rendered manifests are written to `_local/<cluster>/`, which is git-ignored.
+The release name is passed positionally; `--release-name` is a boolean flag that, as in the hydration pipeline, adds
+the release name to the output path. Rendered manifests are written to `_local/<cluster>/`, which is git-ignored.
 
 ### Render All Manifests Locally Without the Workbench
+
+`alpine/helm` ships `yq`, so the same loop runs in one container:
 
 ```sh
  docker run \
@@ -144,16 +152,17 @@ Rendered manifests are written to `_local/<cluster>/`, which is git-ignored.
    -u $(id -u) \
    -v "$(pwd):/apps" \
    -w /apps \
-   ghcr.io/steadforce/steadops/workbenches/k8s:main -c '
-     for cluster in $(yq ".environments | keys[]" helm-config.yaml); do
+   alpine/helm -c '
+     for cluster in $(yq "explode(.) | .environments | keys[]" helm-config.yaml); do
        helm template \
-         -a "$(cluster=$cluster yq ".environments.[env(cluster)].apis | @csv" helm-config.yaml)" \
-         -f "$(cluster=$cluster yq ".environments.[env(cluster)].valueFiles | @csv" helm-config.yaml)" \
+         -a "$(cluster=$cluster yq "explode(.) | .environments.[env(cluster)].apis // [] | @csv" helm-config.yaml)" \
+         -f "$(cluster=$cluster yq "explode(.) | .environments.[env(cluster)].valueFiles // [] | @csv" helm-config.yaml)" \
          --include-crds \
-         -n "$(yq "explode(.) | .namespace // \"\"" helm-config.yaml)" \
+         -n "$(yq "explode(.) | .namespace" helm-config.yaml)" \
          --output-dir "_local/$cluster" \
-         --release-name "$(yq "explode(.) | .releaseName // \"\"" helm-config.yaml)" \
+         --release-name \
          --skip-tests \
+         "$(yq "explode(.) | .releaseName" helm-config.yaml)" \
          .
      done
    '
@@ -195,21 +204,40 @@ In the workbench, from the folder containing this `README.md`:
 On first execution you are asked which flavour of the `act` image to use. The default `medium` is a good starting
 point.
 
-`act` reads workflow secrets, such as `STEADOPS_HELM_RENOVATION_MS_TEAMS_WEBHOOK`, from a `.secrets` file in
-`KEY=value` format. The file is git-ignored.
+`act` reads workflow secrets, such as `STEADOPS_HELM_RENOVATION_MS_TEAMS_WEBHOOK` and
+`STEADOPS_HELM_RENOVATION_ERROR_MS_TEAMS_WEBHOOK`, from a `.secrets` file in `KEY=value` format. The file is
+git-ignored. The unittest workflow never sends Teams notifications under `act`.
 
 > [!NOTE]
 > The hydration workflow skips opening pull requests under `act`, so a local run only renders the manifests.
 
 ## Continuous Integration
 
-- `helm-unittest.yaml` runs the Helm unittest suite on every push and reports results to Microsoft Teams.
-- `helm-hydration.yaml` renders manifests for every environment in `helm-config.yaml` on pushes to `main` and on
-  demand. It opens one pull request per environment against the `environments/<env>` branch watched by ArgoCD.
-- `trufflehog.yaml` scans the repository for leaked secrets on pushes and pull requests to `main`, and on demand.
+All three workflows call reusable workflows from
+[`steadforce/steadops-workflows`](https://github.com/steadforce/steadops-workflows), pinned to `v4.2.0`.
 
-All three call reusable workflows from
-[`steadforce/steadops-workflows`](https://github.com/steadforce/steadops-workflows).
+- `helm-unittest.yaml` runs on every push. It installs the dependencies pinned in `Chart.lock`, runs the Helm
+  unittest suite including subchart tests, publishes a JUnit test report, and runs `helm lint`.
+- `helm-hydration.yaml` runs on pushes to `main` and on demand. For every environment in `helm-config.yaml` it
+  ensures the `environments/<env>` branch and an `env: <env>` label exist, renders the manifests with
+  `helm template`, and opens one pull request per environment against the `environments/<env>` branch watched by
+  ArgoCD. It also adds the ArgoCD `ServerSideApply=true` sync option and sync wave `-1` to CRDs. The workflow grants
+  `contents`, `pull-requests`, and `issues` write permissions, the last one for creating the labels.
+- `trufflehog.yaml` scans the commits of pushes and pull requests to `main`, and runs on demand, for leaked
+  secrets.
+
+### Microsoft Teams Notifications
+
+On branches starting with `renovate/`, the unittest workflow posts its result to Microsoft Teams, so Renovate
+updates can be merged with confidence or are flagged right away:
+
+| Result | Repository Secret |
+| --- | --- |
+| Success | `STEADOPS_HELM_RENOVATION_MS_TEAMS_WEBHOOK` |
+| Failure | `STEADOPS_HELM_RENOVATION_ERROR_MS_TEAMS_WEBHOOK`, a separate error channel |
+
+Both secrets are optional and hold a Microsoft Teams Workflows webhook URL. When the error webhook is not set,
+failures go to `STEADOPS_HELM_RENOVATION_MS_TEAMS_WEBHOOK` instead. Without either secret, no notification is sent.
 
 ### Hydrate a Branch Manually
 
@@ -217,8 +245,40 @@ Open **Actions > Helm hydration > Run workflow**, pick the branch under **Use wo
 
 > [!WARNING]
 > A manual run opens real pull requests against the `environments/<env>` branches. The pull request branch is named
-> after the environment and chart version only, so a branch with the same chart version as `main` updates the same
+> `hydration-pull-request/<env>-<version>`, where `<version>` is the `renovate` subchart version from `Chart.lock`
+> with the patch level replaced by `x`. A branch with the same minor version as `main` therefore updates the same
 > pull request and replaces its manifests.
+
+## Dependency Updates
+
+Renovate keeps the dependencies of this repository up to date, as configured in `renovate.json`:
+
+- Minor and patch updates of all dependencies, including the `renovate` and `valkey` subcharts in `Chart.yaml`,
+  are automerged with a squash commit. Major updates need a manual merge, and each `renovate` major version gets
+  its own pull request.
+- GitHub Actions updates, including `steadforce/steadops-workflows`, are automerged for all update types.
+- Image references in `values*.yaml` files are updated as well.
+
+Renovate updates `Chart.lock` together with `Chart.yaml`. When changing a dependency in `Chart.yaml` by hand,
+regenerate the lock file and commit it together with `Chart.yaml`; hydration fails when the two disagree.
+
+In the workbench:
+
+```sh
+ helm dependency update .
+```
+
+Without the workbench:
+
+```sh
+ docker run \
+   -e HOME=/tmp \
+   --rm \
+   -u $(id -u) \
+   -v "$(pwd):/apps" \
+   -w /apps \
+   alpine/helm dependency update .
+```
 
 ## Resources
 
