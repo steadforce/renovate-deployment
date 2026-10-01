@@ -3,10 +3,14 @@ release:
   name: renovate
 templates:
 - charts/valkey/templates/service.yaml
+- charts/valkey/templates/service-headless.yaml
+- charts/valkey/templates/service-read.yaml
 values:
 - ../values-subchart-overrides.yaml
 tests:
 - it: renders the valkey service targeted by RENOVATE_REDIS_URL for local
+  templates: &valkeyServiceTemplate
+  - charts/valkey/templates/service.yaml
   values:
   - ../values-local.yaml
   asserts: &valkeyServiceAssert
@@ -16,10 +20,59 @@ tests:
   - exists:
       path: spec.ports[?(@.port == 6379)]
 - it: renders the valkey service targeted by RENOVATE_REDIS_URL for development
+  templates: *valkeyServiceTemplate
   values:
   - ../values-development.yaml
   asserts: *valkeyServiceAssert
 - it: renders the valkey service targeted by RENOVATE_REDIS_URL for production
+  templates: *valkeyServiceTemplate
   values:
   - ../values-production.yaml
   asserts: *valkeyServiceAssert
+- it: renders the valkey headless service for replica discovery for development
+  templates: &valkeyHeadlessServiceTemplate
+  - charts/valkey/templates/service-headless.yaml
+  values:
+  - ../values-development.yaml
+  asserts: &valkeyHeadlessServiceAssert
+  - equal:
+      path: metadata.name
+      value: renovate-valkey-headless
+  - equal:
+      path: spec.clusterIP
+      value: None
+  - exists:
+      path: spec.ports[?(@.port == 6379)]
+- it: renders the valkey headless service for replica discovery for production
+  templates: *valkeyHeadlessServiceTemplate
+  values:
+  - ../values-production.yaml
+  asserts: *valkeyHeadlessServiceAssert
+- it: omits the valkey headless service for local (standalone deployment)
+  templates: *valkeyHeadlessServiceTemplate
+  values:
+  - ../values-local.yaml
+  asserts: &valkeyServiceOmittedAssert
+  - hasDocuments:
+      count: 0
+- it: renders the valkey read service for development
+  templates: &valkeyReadServiceTemplate
+  - charts/valkey/templates/service-read.yaml
+  values:
+  - ../values-development.yaml
+  asserts: &valkeyReadServiceAssert
+  - equal:
+      path: metadata.name
+      value: renovate-valkey-read
+  - exists:
+      path: spec.ports[?(@.port == 6379)]
+- it: renders the valkey read service for production
+  templates: *valkeyReadServiceTemplate
+  values:
+  - ../values-production.yaml
+  asserts: *valkeyReadServiceAssert
+- it: omits the valkey read service for local (standalone deployment)
+  templates: *valkeyReadServiceTemplate
+  values:
+  - ../values-local.yaml
+  asserts: *valkeyServiceOmittedAssert
