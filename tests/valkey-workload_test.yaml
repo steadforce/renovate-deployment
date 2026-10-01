@@ -38,19 +38,19 @@ tests:
   documentSelector: *statefulsetSelector
   asserts:
   - matchSnapshot: {}
-- it: omits the valkey statefulset for local (standalone deployment)
+- it: omits the valkey statefulset in standalone mode for local
   templates: *valkeyStatefulsetTemplate
   values: *localValues
   asserts:
   - hasDocuments:
       count: 0
-- it: omits the valkey deployment for development (replicated statefulset)
+- it: omits the valkey deployment in replicated mode for development
   templates: *valkeyDeploymentTemplate
   values: *developmentValues
   asserts:
   - hasDocuments:
       count: 0
-- it: omits the valkey deployment for production (replicated statefulset)
+- it: omits the valkey deployment in replicated mode for production
   templates: *valkeyDeploymentTemplate
   values: *productionValues
   asserts:
@@ -189,7 +189,7 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *metricsExporterResourcesAssert
-- it: sets a production-specific memory limit and request for valkey
+- it: overrides the valkey memory limit and request for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
@@ -200,7 +200,7 @@ tests:
   - equal:
       path: *valkeyMemoryRequestPath
       value: 96Mi
-- it: sets a production-specific cpu request for valkey
+- it: overrides the valkey cpu request for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
@@ -208,7 +208,7 @@ tests:
   - equal:
       path: *valkeyCpuRequestPath
       value: 50m
-- it: sets a production-specific cpu limit for the metrics exporter
+- it: overrides the metrics exporter cpu limit for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
@@ -216,7 +216,7 @@ tests:
   - equal:
       path: *metricsExporterCpuLimitPath
       value: 250m
-- it: sets production-specific probe timeouts for valkey
+- it: overrides the valkey startup and liveness probe timeouts for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector

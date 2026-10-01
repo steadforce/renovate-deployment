@@ -48,7 +48,7 @@ tests:
   values:
   - ../values-production.yaml
   asserts: *valkeyHeadlessServiceAssert
-- it: omits the valkey headless service for local (standalone deployment)
+- it: omits the valkey headless service in standalone mode for local
   templates: *valkeyHeadlessServiceTemplate
   values:
   - ../values-local.yaml
@@ -71,7 +71,7 @@ tests:
   values:
   - ../values-production.yaml
   asserts: *valkeyReadServiceAssert
-- it: omits the valkey read service for local (standalone deployment)
+- it: omits the valkey read service in standalone mode for local
   templates: *valkeyReadServiceTemplate
   values:
   - ../values-local.yaml
