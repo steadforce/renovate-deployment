@@ -66,7 +66,7 @@ tests:
       pattern: &localCpuPattern "^0(m)?$"
   - matchRegex:
       path: &valkeyMemoryLimitPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.memory
-      pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+      pattern: &nonZeroMemoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
       path: &valkeyCpuRequestPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.cpu
       pattern: *localCpuPattern
@@ -80,16 +80,16 @@ tests:
   asserts: &valkeyResourcesAssert
   - matchRegex:
       path: *valkeyCpuLimitPath
-      pattern: &cpuPattern "^[1-9][0-9]*(m)?$"
+      pattern: &nonZeroCpuPattern "^[1-9][0-9]*(m)?$"
   - matchRegex:
       path: *valkeyMemoryLimitPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
   - matchRegex:
       path: *valkeyCpuRequestPath
-      pattern: *cpuPattern
+      pattern: *nonZeroCpuPattern
   - matchRegex:
       path: *valkeyMemoryRequestPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
 - it: sets non-zero valkey resource limits and requests for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
@@ -160,7 +160,7 @@ tests:
       pattern: *localCpuPattern
   - matchRegex:
       path: &metricsExporterMemoryLimitPath spec.template.spec.containers[?(@.name == "metrics")].resources.limits.memory
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
   - matchRegex:
       path: &metricsExporterCpuRequestPath spec.template.spec.containers[?(@.name == "metrics")].resources.requests.cpu
       pattern: *localCpuPattern
@@ -174,16 +174,16 @@ tests:
   asserts: &metricsExporterResourcesAssert
   - matchRegex:
       path: *metricsExporterCpuLimitPath
-      pattern: *cpuPattern
+      pattern: *nonZeroCpuPattern
   - matchRegex:
       path: *metricsExporterMemoryLimitPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
   - matchRegex:
       path: *metricsExporterCpuRequestPath
-      pattern: *cpuPattern
+      pattern: *nonZeroCpuPattern
   - matchRegex:
       path: *metricsExporterMemoryRequestPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
 - it: sets non-zero metrics exporter resource limits and requests for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
