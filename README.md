@@ -10,11 +10,13 @@ environments.
 ## Overview
 
 - Runs Renovate as a Kubernetes `CronJob` every hour at minute 13, backed by a `valkey` cache for faster repeat runs.
-- Renders Renovate's onboarding config into a `ConfigMap` that is mounted into the job.
+- Renders Renovate's global config (autodiscovery, onboarding config, and `pypi` grouping rules) into a `ConfigMap`
+  that is mounted into the job.
 - Fetches the Gitea credentials used by Renovate through an `ExternalSecret`, scoped per environment.
 - Exposes Valkey metrics to the cluster Prometheus through a `redis_exporter` sidecar and a `ServiceMonitor`,
   see [Monitoring](#monitoring).
-- Ships Helm unittest coverage for every rendered resource, see [Testing](#testing).
+- Ships Helm unittest coverage for every rendered resource except the Valkey `ServiceAccount`, see
+  [Testing](#testing).
 - Hydrates the manifests of every environment into pull requests for ArgoCD, see
   [Continuous Integration](#continuous-integration).
 
@@ -27,8 +29,9 @@ environments.
 | `values-subchart-overrides.yaml` | Overrides for the `renovate` and `valkey` chart dependencies. |
 | `values-local.yaml`, `values-development.yaml`, `values-production.yaml` | Per-environment value overrides. |
 | `helm-config.yaml` | Maps each cluster environment to its `valueFiles` and required Kubernetes `apis`. |
-| `tests/` | Helm unittest suites, one per rendered resource, with git-ignored snapshots. |
+| `tests/` | Helm unittest suites, one per rendered resource kind, with git-ignored snapshots. |
 | `renovate.json` | This repository's own Renovate configuration, for keeping its dependencies up to date. |
+| `.github/workflows/` | CI workflows for unit tests, hydration, and secret scanning. |
 
 > [!NOTE]
 > `values-subchart-overrides.yaml` is kept separate from the environment value files so that dependency-compatible
@@ -101,7 +104,22 @@ Without the workbench:
 
 ### Run Helm Unittests
 
-After [fetching the chart dependencies](#fetch-chart-dependencies):
+After [fetching the chart dependencies](#fetch-chart-dependencies), in the workbench:
+
+```sh
+ helm unittest .
+```
+
+The workbench image does not ship the helm-unittest plugin. The command works because the workbench mounts your
+`$HOME`, so a plugin installed in the host's Helm home is available. Install it once with:
+
+```sh
+ helm plugin install --verify=false https://github.com/helm-unittest/helm-unittest.git
+```
+
+Helm 4 needs `--verify=false` for this unsigned plugin, as the pipeline does.
+
+Without the workbench:
 
 ```sh
  docker run \

@@ -23,7 +23,7 @@ tests:
   - matchSnapshot: {}
 - it: renders the renovate config data for local
   values: *localValues
-  asserts: &dataAssert
+  asserts: &renovateConfigDataAssert
   - equal:
       path: data
       value:
@@ -57,7 +57,7 @@ tests:
           }
 - it: renders the renovate config data for development
   values: *developmentValues
-  asserts: *dataAssert
+  asserts: *renovateConfigDataAssert
 - it: renders the renovate config data for production
   values: *productionValues
-  asserts: *dataAssert
+  asserts: *renovateConfigDataAssert
