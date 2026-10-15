@@ -14,3 +14,28 @@ spec:
     name: awssm-parameter-store
   target:
     name: *name
+---
+# Source: renovate/charts/renovate/templates/extra-manifests.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: &name renovate-gitconfig
+spec:
+  dataFrom:
+    - extract:
+        key: /production/renovate/gitea
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: awssm-parameter-store
+  target:
+    name: *name
+    template:
+      engineVersion: v2
+      data:
+        # replaces the image's /etc/gitconfig, so it keeps its safe.directory setting
+        gitconfig: |
+          [safe]
+            directory = *
+          [http "{{ .RENOVATE_ENDPOINT | trimSuffix "/" | trimSuffix "/api/v1" }}/"]
+            extraHeader = Authorization: token {{ .RENOVATE_TOKEN }}
