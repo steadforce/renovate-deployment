@@ -1,0 +1,34 @@
+suite: valkey init config configmap
+release:
+  name: renovate
+  # matches the hydration namespace from helm-config.yaml
+  namespace: renovate
+templates:
+- charts/valkey/templates/init_config.yaml
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: configures replicas to follow the valkey primary for development
+  values:
+  - ../values-development.yaml
+  asserts: &valkeyReplicationAssert
+  - equal:
+      path: metadata.name
+      value: renovate-valkey-init-scripts
+  - matchRegex:
+      path: data["init.sh"]
+      pattern: 'MASTER_HOST="renovate-valkey-0\.renovate-valkey-headless\.renovate\.svc\.cluster\.local"'
+  - matchRegex:
+      path: data["init.sh"]
+      pattern: 'echo "replicaof \$MASTER_HOST \$MASTER_PORT"'
+- it: configures replicas to follow the valkey primary for production
+  values:
+  - ../values-production.yaml
+  asserts: *valkeyReplicationAssert
+- it: omits the replication setup in standalone mode for local
+  values:
+  - ../values-local.yaml
+  asserts:
+  - notMatchRegex:
+      path: data["init.sh"]
+      pattern: replicaof

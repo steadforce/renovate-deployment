@@ -29,7 +29,7 @@ tests:
       pattern: &localCpuPattern "^0(m)?$"
   - matchRegex:
       path: &renovateMemoryLimitPath spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.limits.memory
-      pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+      pattern: &nonZeroMemoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
       path: &renovateCpuRequestPath spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].resources.requests.cpu
       pattern: *localCpuPattern
@@ -41,20 +41,20 @@ tests:
   asserts: &renovateResourcesAssert
   - matchRegex:
       path: *renovateCpuLimitPath
-      pattern: &cpuPattern "^[1-9][0-9]*(m)?$"
+      pattern: &nonZeroCpuPattern "^[1-9][0-9]*(m)?$"
   - matchRegex:
       path: *renovateMemoryLimitPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
   - matchRegex:
       path: *renovateCpuRequestPath
-      pattern: *cpuPattern
+      pattern: *nonZeroCpuPattern
   - matchRegex:
       path: *renovateMemoryRequestPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
 - it: sets non-zero renovate resource limits and requests for production
   values: *productionValues
   asserts: *renovateResourcesAssert
-- it: sets production-specific resource limits and memory request for renovate
+- it: overrides the renovate resource limits and memory request for production
   values: *productionValues
   asserts:
   - equal:

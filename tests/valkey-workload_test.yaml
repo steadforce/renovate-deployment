@@ -38,19 +38,19 @@ tests:
   documentSelector: *statefulsetSelector
   asserts:
   - matchSnapshot: {}
-- it: omits the valkey statefulset for local (standalone deployment)
+- it: omits the valkey statefulset in standalone mode for local
   templates: *valkeyStatefulsetTemplate
   values: *localValues
   asserts:
   - hasDocuments:
       count: 0
-- it: omits the valkey deployment for development (replicated statefulset)
+- it: omits the valkey deployment in replicated mode for development
   templates: *valkeyDeploymentTemplate
   values: *developmentValues
   asserts:
   - hasDocuments:
       count: 0
-- it: omits the valkey deployment for production (replicated statefulset)
+- it: omits the valkey deployment in replicated mode for production
   templates: *valkeyDeploymentTemplate
   values: *productionValues
   asserts:
@@ -66,7 +66,7 @@ tests:
       pattern: &localCpuPattern "^0(m)?$"
   - matchRegex:
       path: &valkeyMemoryLimitPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.limits.memory
-      pattern: &memoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
+      pattern: &nonZeroMemoryPattern "^[1-9][0-9]*(Ki|Mi|Gi)?$"
   - matchRegex:
       path: &valkeyCpuRequestPath spec.template.spec.containers[?(@.name == "renovate-valkey")].resources.requests.cpu
       pattern: *localCpuPattern
@@ -80,16 +80,16 @@ tests:
   asserts: &valkeyResourcesAssert
   - matchRegex:
       path: *valkeyCpuLimitPath
-      pattern: &cpuPattern "^[1-9][0-9]*(m)?$"
+      pattern: &nonZeroCpuPattern "^[1-9][0-9]*(m)?$"
   - matchRegex:
       path: *valkeyMemoryLimitPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
   - matchRegex:
       path: *valkeyCpuRequestPath
-      pattern: *cpuPattern
+      pattern: *nonZeroCpuPattern
   - matchRegex:
       path: *valkeyMemoryRequestPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
 - it: sets non-zero valkey resource limits and requests for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
@@ -160,7 +160,7 @@ tests:
       pattern: *localCpuPattern
   - matchRegex:
       path: &metricsExporterMemoryLimitPath spec.template.spec.containers[?(@.name == "metrics")].resources.limits.memory
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
   - matchRegex:
       path: &metricsExporterCpuRequestPath spec.template.spec.containers[?(@.name == "metrics")].resources.requests.cpu
       pattern: *localCpuPattern
@@ -174,22 +174,22 @@ tests:
   asserts: &metricsExporterResourcesAssert
   - matchRegex:
       path: *metricsExporterCpuLimitPath
-      pattern: *cpuPattern
+      pattern: *nonZeroCpuPattern
   - matchRegex:
       path: *metricsExporterMemoryLimitPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
   - matchRegex:
       path: *metricsExporterCpuRequestPath
-      pattern: *cpuPattern
+      pattern: *nonZeroCpuPattern
   - matchRegex:
       path: *metricsExporterMemoryRequestPath
-      pattern: *memoryPattern
+      pattern: *nonZeroMemoryPattern
 - it: sets non-zero metrics exporter resource limits and requests for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *metricsExporterResourcesAssert
-- it: sets a production-specific memory limit and request for valkey
+- it: overrides the valkey memory limit and request for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
@@ -200,7 +200,7 @@ tests:
   - equal:
       path: *valkeyMemoryRequestPath
       value: 96Mi
-- it: sets a production-specific cpu request for valkey
+- it: overrides the valkey cpu request for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
@@ -208,7 +208,7 @@ tests:
   - equal:
       path: *valkeyCpuRequestPath
       value: 50m
-- it: sets a production-specific cpu limit for the metrics exporter
+- it: overrides the metrics exporter cpu limit for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
@@ -216,7 +216,7 @@ tests:
   - equal:
       path: *metricsExporterCpuLimitPath
       value: 250m
-- it: sets production-specific probe timeouts for valkey
+- it: overrides the valkey startup and liveness probe timeouts for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
