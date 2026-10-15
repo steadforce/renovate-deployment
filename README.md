@@ -11,6 +11,8 @@ environments.
 
 - Runs Renovate as a Kubernetes `CronJob` every hour at minute 13, backed by a `valkey` cache for faster repeat runs.
 - Renders Renovate's onboarding config into a `ConfigMap` that is mounted into the job.
+- Allows Renovate to reach the Gitea hosts `gitea.dev.k8s01.steadforce.com` and `gitea.k8s01.steadforce.com`,
+  which resolve to internal addresses, through `hostRules` with `allowInternal`.
 - Fetches the Gitea credentials used by Renovate through an `ExternalSecret`, scoped per environment.
 - Exposes Valkey metrics to the cluster Prometheus through a `redis_exporter` sidecar and a `ServiceMonitor`,
   see [Monitoring](#monitoring).
