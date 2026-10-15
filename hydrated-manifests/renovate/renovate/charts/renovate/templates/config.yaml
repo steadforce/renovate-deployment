@@ -6,15 +6,25 @@ metadata:
   name: renovate-config
   namespace: renovate
   labels:
-    helm.sh/chart: renovate-46.357.7
+    helm.sh/chart: renovate-46.366.0
     app.kubernetes.io/name: renovate
     app.kubernetes.io/instance: renovate
-    app.kubernetes.io/version: "44.155.7"
+    app.kubernetes.io/version: "44.164.1"
     app.kubernetes.io/managed-by: Helm
 data:
   config.json: |-
     {
        "autodiscover": true,
+       "hostRules": [
+         {
+           "matchHost": "gitea.dev.k8s01.steadforce.com",
+           "allowInternal": true
+         },
+         {
+           "matchHost": "gitea.k8s01.steadforce.com",
+           "allowInternal": true
+         }
+       ],
        "onboardingConfig": {
          "$schema": "https://docs.renovatebot.com/renovate-schema.json",
          "extends": [
