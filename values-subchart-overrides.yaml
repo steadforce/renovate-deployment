@@ -63,6 +63,20 @@ renovate:
   envFrom:
   - secretRef:
       name: renovate-environment
+  # WORKAROUND, remove once Ubuntu fixes curl: with libcurl 8.5.0-2ubuntu10.16 (Renovate image 44.164.1 and later),
+  # git wrongly detects a redirect after the first request and drops the token Renovate embeds in the clone URL, so
+  # every private repository fails with "could not read Username". A system gitconfig sends the token as an HTTP
+  # header instead, which git keeps. Remove it together with the renovate-gitconfig ExternalSecret below when a
+  # Renovate image with a fixed libcurl works without it.
+  extraVolumes:
+  - name: gitconfig
+    secret:
+      secretName: renovate-gitconfig
+  extraVolumeMounts:
+  - name: gitconfig
+    mountPath: /etc/gitconfig
+    subPath: gitconfig
+    readOnly: true
   extraObjects:
   - |
     {{- if .Capabilities.APIVersions.Has "external-secrets.io/v1/ExternalSecret" }}
@@ -80,6 +94,33 @@ renovate:
         name: awssm-parameter-store
       target:
         name: *name
+    {{- end }}
+  # WORKAROUND for the libcurl redirect bug, see extraVolumes above; remove together with it.
+  - |
+    {{- if .Capabilities.APIVersions.Has "external-secrets.io/v1/ExternalSecret" }}
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: &name renovate-gitconfig
+    spec:
+      dataFrom:
+      - extract:
+          key: /{{ .Values.global.stage }}/renovate/gitea
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: awssm-parameter-store
+      target:
+        name: *name
+        template:
+          engineVersion: v2
+          data:
+            # replaces the image's /etc/gitconfig, so it keeps its safe.directory setting
+            gitconfig: |
+              [safe]
+                directory = *
+              [http "{{ `{{ .RENOVATE_ENDPOINT | trimSuffix "/" | trimSuffix "/api/v1" }}` }}/"]
+                extraHeader = Authorization: token {{ `{{ .RENOVATE_TOKEN }}` }}
     {{- end }}
 
 valkey:

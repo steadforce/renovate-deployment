@@ -16,6 +16,8 @@ environments.
 - Allows Renovate to reach the Gitea hosts `gitea.dev.k8s01.steadforce.com` and `gitea.k8s01.steadforce.com`,
   which resolve to internal addresses, through `hostRules` with `allowInternal`.
 - Fetches the Gitea credentials used by Renovate through an `ExternalSecret`, scoped per environment.
+- Sends the Gitea token to git as an HTTP header through a system `gitconfig`, a temporary workaround for a libcurl
+  bug, see [Git Authentication Workaround](#git-authentication-workaround).
 - Exposes Valkey metrics to the cluster Prometheus through a `redis_exporter` sidecar and a `ServiceMonitor`,
   see [Monitoring](#monitoring).
 - Ships Helm unittest coverage for every rendered resource except the Valkey `ServiceAccount`, see
@@ -65,6 +67,28 @@ Notable overrides per environment:
 > [!NOTE]
 > The Valkey chart has no separate resources for primary and replicas. Valkey `resources` apply to every pod of the
 > StatefulSet, so the replicated environments request them four times.
+
+## Git Authentication Workaround
+
+> [!WARNING]
+> Temporary. Remove it once Ubuntu fixes the libcurl regression.
+
+Since Renovate image 44.164.1, the image ships libcurl `8.5.0-2ubuntu10.16`. With it, git wrongly reports a redirect
+("warning: redirecting to …/repo.git/") after the first request and drops the token that Renovate embeds in the clone
+URL. Every private repository then fails with `external-host-error` ("could not read Username"); public repositories
+are not affected. Image 44.115.12 with libcurl `8.5.0-2ubuntu10.15` works.
+
+As a workaround, the `renovate-gitconfig` `ExternalSecret` builds a git config from the same Parameter Store entry as
+`renovate-environment` (`/<stage>/renovate/gitea`), and the job mounts it as `/etc/gitconfig`:
+
+- `http."<gitea host>/".extraHeader = Authorization: token <RENOVATE_TOKEN>` sends the token with every request, so
+  git stays authenticated after the false redirect. The host comes from `RENOVATE_ENDPOINT` without `/api/v1`.
+- `safe.directory = *` keeps the setting of the image's own `/etc/gitconfig`, which the mount replaces.
+
+To remove it, check that the libcurl of a newer Renovate image is fixed (a plain `git ls-remote` of a private
+repository with the token in the URL succeeds without the redirect warning), then delete `extraVolumes`,
+`extraVolumeMounts` and the `renovate-gitconfig` `ExternalSecret` in `values-subchart-overrides.yaml`, the
+`renovate-gitconfig` tests, and this section.
 
 ## Prerequisites
 

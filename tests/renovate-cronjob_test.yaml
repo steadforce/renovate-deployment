@@ -211,3 +211,26 @@ tests:
 - it: omits the LOG_LEVEL override for production
   values: *productionValues
   asserts: *renovateLogLevelOmittedAssert
+# WORKAROUND for the libcurl redirect bug (see values-subchart-overrides.yaml); remove together with it.
+- it: mounts the renovate-gitconfig secret as the system gitconfig for local
+  values: *localValues
+  asserts: &gitconfigMountAssert
+  - contains:
+      path: spec.jobTemplate.spec.template.spec.volumes
+      content:
+        name: gitconfig
+        secret:
+          secretName: renovate-gitconfig
+  - contains:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].volumeMounts
+      content:
+        name: gitconfig
+        mountPath: /etc/gitconfig
+        subPath: gitconfig
+        readOnly: true
+- it: mounts the renovate-gitconfig secret as the system gitconfig for development
+  values: *developmentValues
+  asserts: *gitconfigMountAssert
+- it: mounts the renovate-gitconfig secret as the system gitconfig for production
+  values: *productionValues
+  asserts: *gitconfigMountAssert
