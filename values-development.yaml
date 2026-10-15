@@ -1,2 +1,6 @@
 global:
   stage: development
+renovate:
+  cronjob:
+    # faster feedback on dev; concurrencyPolicy Forbid skips a start while a run is still active
+    schedule: '*/7 * * * *'
