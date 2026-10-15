@@ -20,9 +20,21 @@ renovate:
      memory: 512Mi
 
   renovate:
+    # hostRules: the Gitea hosts resolve to internal addresses, which Renovate will block by
+    # default (internalHostAccess=block) in a future major release
     config: |
       {
          "autodiscover": true,
+         "hostRules": [
+           {
+             "matchHost": "gitea.dev.k8s01.steadforce.com",
+             "allowInternal": true
+           },
+           {
+             "matchHost": "gitea.k8s01.steadforce.com",
+             "allowInternal": true
+           }
+         ],
          "onboardingConfig": {
            "$schema": "https://docs.renovatebot.com/renovate-schema.json",
            "extends": [
