@@ -84,15 +84,18 @@ tests:
   - equal:
       path: spec.schedule
       value: "*/1 * * * *"
-- it: runs the cronjob hourly at minute 13 for development
+- it: runs the cronjob every 7 minutes for development
   values: *developmentValues
-  asserts: &renovateScheduleAssert
+  asserts:
+  - equal:
+      path: spec.schedule
+      value: "*/7 * * * *"
+- it: runs the cronjob hourly at minute 13 for production
+  values: *productionValues
+  asserts:
   - equal:
       path: spec.schedule
       value: "13 */1 * * *"
-- it: runs the cronjob hourly at minute 13 for production
-  values: *productionValues
-  asserts: *renovateScheduleAssert
 - it: sets activeDeadlineSeconds to 1200 for local
   values: *localValues
   asserts: &renovateActiveDeadlineSecondsAssert

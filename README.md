@@ -9,7 +9,8 @@ environments.
 
 ## Overview
 
-- Runs Renovate as a Kubernetes `CronJob` every hour at minute 13, backed by a `valkey` cache for faster repeat runs.
+- Runs Renovate as a Kubernetes `CronJob` every hour at minute 13 (every 7 minutes on dev), backed by a `valkey`
+  cache for faster repeat runs.
 - Renders Renovate's onboarding config into a `ConfigMap` that is mounted into the job.
 - Allows Renovate to reach the Gitea hosts `gitea.dev.k8s01.steadforce.com` and `gitea.k8s01.steadforce.com`,
   which resolve to internal addresses, through `hostRules` with `allowInternal`.
@@ -54,7 +55,7 @@ Notable overrides per environment:
 - `local`: zero CPU and memory requests, standalone Valkey on a `100Mi` `nfs1` PVC, 1-minute cronjob schedule,
   `LOG_LEVEL=debug`.
 - `sf-k8s01-dev`, `sf-k8s02-dev`: base resource limits, replicated Valkey (1 primary + 3 replicas, one `100Mi`
-  `nfs1` volume per pod).
+  `nfs1` volume per pod), 7-minute cronjob schedule.
 - `sf-k8s01-prod`: increased Renovate resource limits, 51-minute `activeDeadlineSeconds`, `128Mi` Valkey memory
   limit, and no Valkey RDB snapshots.
 
