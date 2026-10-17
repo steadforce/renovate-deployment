@@ -6,10 +6,10 @@ metadata:
   name: renovate
   namespace: renovate
   labels:
-    helm.sh/chart: renovate-46.366.3
+    helm.sh/chart: renovate-46.367.0
     app.kubernetes.io/name: renovate
     app.kubernetes.io/instance: renovate
-    app.kubernetes.io/version: "44.164.5"
+    app.kubernetes.io/version: "44.165.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   schedule: "13 */1 * * *"
@@ -34,7 +34,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: renovate
-              image: "ghcr.io/renovatebot/renovate:44.164.5"
+              image: "ghcr.io/renovatebot/renovate:44.165.0"
               imagePullPolicy: IfNotPresent
               volumeMounts:
                 - name: config-volume
