@@ -20,7 +20,7 @@ renovate:
      memory: 512Mi
 
   renovate:
-    # hostRules: the Gitea hosts resolve to internal addresses, which Renovate will block by
+    # hostRules: the Gitea and Harbor hosts resolve to internal addresses, which Renovate will block by
     # default (internalHostAccess=block) in a future major release
     config: |
       {
@@ -32,6 +32,10 @@ renovate:
            },
            {
              "matchHost": "gitea.k8s01.steadforce.com",
+             "allowInternal": true
+           },
+           {
+             "matchHost": "harbor.k8s01.steadforce.com",
              "allowInternal": true
            }
          ],
