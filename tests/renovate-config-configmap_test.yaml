@@ -38,6 +38,10 @@ tests:
                {
                  "matchHost": "gitea.k8s01.steadforce.com",
                  "allowInternal": true
+               },
+               {
+                 "matchHost": "harbor.k8s01.steadforce.com",
+                 "allowInternal": true
                }
              ],
              "onboardingConfig": {

@@ -13,8 +13,9 @@ environments.
   cache for faster repeat runs.
 - Renders Renovate's global config (autodiscovery, onboarding config, `pypi` grouping rules, and `hostRules`) into a
   `ConfigMap` that is mounted into the job.
-- Allows Renovate to reach the Gitea hosts `gitea.dev.k8s01.steadforce.com` and `gitea.k8s01.steadforce.com`,
-  which resolve to internal addresses, through `hostRules` with `allowInternal`.
+- Allows Renovate to reach the Gitea hosts `gitea.dev.k8s01.steadforce.com` and `gitea.k8s01.steadforce.com` and the
+  Harbor host `harbor.k8s01.steadforce.com` (proxy-cache images in scanned repos), which resolve to internal
+  addresses, through `hostRules` with `allowInternal`.
 - Fetches the Gitea credentials used by Renovate through an `ExternalSecret`, scoped per environment.
 - Sends the Gitea token to git as an HTTP header through a system `gitconfig`, a temporary workaround for a libcurl
   bug, see [Git Authentication Workaround](#git-authentication-workaround).
