@@ -6,14 +6,17 @@ metadata:
   name: &name renovate-environment
 spec:
   dataFrom:
-    - extract:
-        key: /production/renovate/gitea
+  - extract:
+      key: /production/renovate/gitea
   refreshInterval: 1h
   secretStoreRef:
     kind: ClusterSecretStore
     name: awssm-parameter-store
   target:
     name: *name
+
+
+
 ---
 # Source: renovate/charts/renovate/templates/extra-manifests.yaml
 apiVersion: external-secrets.io/v1
@@ -22,8 +25,8 @@ metadata:
   name: &name renovate-gitconfig
 spec:
   dataFrom:
-    - extract:
-        key: /production/renovate/gitea
+  - extract:
+      key: /production/renovate/gitea
   refreshInterval: 1h
   secretStoreRef:
     kind: ClusterSecretStore
@@ -39,3 +42,6 @@ spec:
             directory = *
           [http "{{ .RENOVATE_ENDPOINT | trimSuffix "/" | trimSuffix "/api/v1" }}/"]
             extraHeader = Authorization: token {{ .RENOVATE_TOKEN }}
+
+
+
