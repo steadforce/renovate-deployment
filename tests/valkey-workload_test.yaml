@@ -114,15 +114,15 @@ tests:
   values: *productionValues
   documentSelector: *statefulsetSelector
   asserts: *valkeyImageAssert
-- it: runs one valkey primary and three replicas for development
+- it: runs a single valkey pod, the master alone, for development
   templates: *valkeyStatefulsetTemplate
   values: *developmentValues
   documentSelector: *statefulsetSelector
   asserts: &valkeyReplicaCountAssert
   - equal:
       path: spec.replicas
-      value: 4
-- it: runs one valkey primary and three replicas for production
+      value: 1
+- it: runs a single valkey pod, the master alone, for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector

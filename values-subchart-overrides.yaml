@@ -130,8 +130,9 @@ renovate:
 valkey:
   replica:
     enabled: true
-    # Valkey pods including the master (chart 1.0: replica.replicas counts the master): 1 master and 3 replicas
-    replicas: 4
+    # Valkey pods including the master (chart 1.0: replica.replicas counts the master). Renovate's cache is disposable, so one pod is
+    # enough: a master alone (the chart allows 1; Sentinel would need 2). Both Services still work: renovate-valkey selects pod 0, renovate-valkey-read selects every pod.
+    replicas: 1
   # one block for both modes; the PVC names (valkey-data-renovate-valkey-N) do not change
   persistence:
     enabled: true

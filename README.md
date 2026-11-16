@@ -60,14 +60,17 @@ Notable overrides per environment:
 
 - `local`: zero CPU and memory requests, standalone Valkey on a `100Mi` `nfs1` PVC, 1-minute cronjob schedule,
   `LOG_LEVEL=debug`.
-- `sf-k8s01-dev`, `sf-k8s02-dev`: base resource limits, replicated Valkey (1 primary + 3 replicas, one `100Mi`
-  `nfs1` volume per pod), 7-minute cronjob schedule.
+- `sf-k8s01-dev`, `sf-k8s02-dev`: base resource limits, a single Valkey pod (the master alone, a `100Mi` `nfs1`
+  volume), 7-minute cronjob schedule.
 - `sf-k8s01-prod`: increased Renovate resource limits, 51-minute `activeDeadlineSeconds`, `128Mi` Valkey memory
   limit, and no Valkey RDB snapshots.
 
 > [!NOTE]
-> The Valkey chart has no separate resources for primary and replicas. Valkey `resources` apply to every pod of the
-> StatefulSet, so the replicated environments request them four times.
+> Renovate's cache is disposable, so Valkey runs as one pod (`valkey.replica.replicas: 1`; in chart 1.0 the number counts the
+> master). A restart of that pod, for example a node reboot, starts with an empty cache: the next Renovate run looks up every
+> package again and takes longer once. The earlier setup (1 master and 3 replicas) kept the cache through a restart of one pod;
+> to get that back raise `replica.replicas` (every pod gets the same `resources`), or drop `extraConfig: save ""` in
+> `values-production.yaml` so that the master snapshots to its volume.
 
 ## Git Authentication Workaround
 
