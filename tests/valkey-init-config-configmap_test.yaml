@@ -20,7 +20,7 @@ tests:
       pattern: 'MASTER_HOST="renovate-valkey-0\.renovate-valkey-headless\.renovate\.svc\.cluster\.local"'
   - matchRegex:
       path: data["init.sh"]
-      pattern: 'echo "replicaof \$MASTER_HOST \$MASTER_PORT"'
+      pattern: 'REPLICATION_TARGET="replicaof \$MASTER_HOST \$MASTER_PORT"'
 - it: configures replicas to follow the valkey primary for production
   values:
   - ../values-production.yaml

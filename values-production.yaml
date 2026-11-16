@@ -13,7 +13,7 @@ renovate:
 valkey:
   # Renovate's cache is disposable and replicas sync diskless, so skip RDB
   # snapshots to keep valkey off the (sometimes slow) NFS volumes
-  valkeyConfig: |
+  extraConfig: |
     save ""
   resources:
     limits:

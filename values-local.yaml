@@ -24,10 +24,6 @@ valkey:
     requests:
       cpu: 0m
       memory: 0Mi
-  dataStorage:
-    enabled: true
-    requestedSize: 100Mi
-    className: nfs1
   metrics:
     exporter:
       resources:
