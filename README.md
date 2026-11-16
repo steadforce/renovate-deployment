@@ -67,10 +67,13 @@ Notable overrides per environment:
 
 > [!NOTE]
 > Renovate's cache is disposable, so Valkey runs as one pod (`valkey.replica.replicas: 1`; in chart 1.0 the number counts the
-> master). A restart of that pod, for example a node reboot, starts with an empty cache: the next Renovate run looks up every
-> package again and takes longer once. The earlier setup (1 master and 3 replicas) kept the cache through a restart of one pod;
-> to get that back raise `replica.replicas` (every pod gets the same `resources`), or drop `extraConfig: save ""` in
-> `values-production.yaml` so that the master snapshots to its volume.
+> master). Extra replicas never kept the cache through a restart of the master: without Sentinel (failover) pod 0 stays the
+> master, and when it comes back empty the replicas resynchronise from it.
+>
+> - `sf-k8s01-prod`: `values-production.yaml` sets `extraConfig: save ""` (no snapshots), so a restart of the pod, for example a node
+>   reboot, starts with an empty cache: the next Renovate run looks up every package again and takes longer once. To keep the cache
+>   through a restart, drop `save ""` there so that the master snapshots to its volume.
+> - `sf-k8s01-dev`, `sf-k8s02-dev`: the chart's default RDB snapshots stay on, so the pod restarts with its data.
 
 ## Git Authentication Workaround
 
