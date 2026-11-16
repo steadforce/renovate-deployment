@@ -130,10 +130,13 @@ renovate:
 valkey:
   replica:
     enabled: true
-    replicas: 3
-    persistence:
-      size: 100Mi
-      storageClass: nfs1
+    # Valkey pods including the master (chart 1.0: replica.replicas counts the master): 1 master and 3 replicas
+    replicas: 4
+  # one block for both modes; the PVC names (valkey-data-renovate-valkey-N) do not change
+  persistence:
+    enabled: true
+    size: 100Mi
+    storageClass: nfs1
   resources:
     limits:
       cpu: 300m
@@ -145,7 +148,7 @@ valkey:
     enabled: true
     serviceMonitor:
       enabled: true
-      extraLabels:
+      labels:
         prometheus: cluster-monitoring
     exporter:
       resources:
