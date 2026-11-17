@@ -26,7 +26,11 @@ valkey:
       resources:
         limits:
           cpu: 250m
+  # The probes run `sh -c valkey-cli ping` as an exec, which needs more than the 1 s default on a busy node
+  # (observed on production: 32 readiness timeouts in 73 minutes while valkey itself answered in milliseconds).
   startupProbe:
     timeoutSeconds: 5
   livenessProbe:
+    timeoutSeconds: 5
+  readinessProbe:
     timeoutSeconds: 5

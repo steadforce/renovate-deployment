@@ -217,7 +217,7 @@ tests:
   - equal:
       path: *metricsExporterCpuLimitPath
       value: 250m
-- it: overrides the valkey startup and liveness probe timeouts for production
+- it: overrides the valkey startup, liveness and readiness probe timeouts for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
   documentSelector: *statefulsetSelector
@@ -228,6 +228,17 @@ tests:
   - equal:
       path: spec.template.spec.containers[?(@.name == "valkey")].livenessProbe.timeoutSeconds
       value: 5
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "valkey")].readinessProbe.timeoutSeconds
+      value: 5
+- it: keeps the chart default readiness probe timeout for development
+  templates: *valkeyStatefulsetTemplate
+  values: *developmentValues
+  documentSelector: *statefulsetSelector
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "valkey")].readinessProbe.timeoutSeconds
+      value: 1
 - it: mounts the valkey config configmap into the init container for production
   templates: *valkeyStatefulsetTemplate
   values: *productionValues
