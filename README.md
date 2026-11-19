@@ -13,8 +13,9 @@ environments.
   cache for faster repeat runs.
 - Renders Renovate's global config (autodiscovery, onboarding config, `pypi` grouping rules, and `hostRules`) into a
   `ConfigMap` that is mounted into the job.
-- Allows Renovate to reach the Gitea hosts `gitea.dev.k8s01.steadforce.com` and `gitea.k8s01.steadforce.com`,
-  which resolve to internal addresses, through `hostRules` with `allowInternal`.
+- Allows Renovate to reach the Gitea hosts `gitea.dev.k8s01.steadforce.com` and `gitea.k8s01.steadforce.com` and the
+  Harbor host `harbor.k8s01.steadforce.com` (proxy-cache images in scanned repos), which resolve to internal
+  addresses, through `hostRules` with `allowInternal`.
 - Fetches the Gitea credentials used by Renovate through an `ExternalSecret`, scoped per environment.
 - Sends the Gitea token to git as an HTTP header through a system `gitconfig`, a temporary workaround for a libcurl
   bug, see [Git Authentication Workaround](#git-authentication-workaround).
@@ -59,14 +60,20 @@ Notable overrides per environment:
 
 - `local`: zero CPU and memory requests, standalone Valkey on a `100Mi` `nfs1` PVC, 1-minute cronjob schedule,
   `LOG_LEVEL=debug`.
-- `sf-k8s01-dev`, `sf-k8s02-dev`: base resource limits, replicated Valkey (1 primary + 3 replicas, one `100Mi`
-  `nfs1` volume per pod), 7-minute cronjob schedule.
+- `sf-k8s01-dev`, `sf-k8s02-dev`: base resource limits, a single Valkey pod (the master alone, a `100Mi` `nfs1`
+  volume), 7-minute cronjob schedule.
 - `sf-k8s01-prod`: increased Renovate resource limits, 51-minute `activeDeadlineSeconds`, `128Mi` Valkey memory
   limit, and no Valkey RDB snapshots.
 
 > [!NOTE]
-> The Valkey chart has no separate resources for primary and replicas. Valkey `resources` apply to every pod of the
-> StatefulSet, so the replicated environments request them four times.
+> Renovate's cache is disposable, so Valkey runs as one pod (`valkey.replica.replicas: 1`; in chart 1.0 the number counts the
+> master). Extra replicas never kept the cache through a restart of the master: without Sentinel (failover) pod 0 stays the
+> master, and when it comes back empty the replicas resynchronise from it.
+>
+> - `sf-k8s01-prod`: `values-production.yaml` sets `extraConfig: save ""` (no snapshots), so a restart of the pod, for example a node
+>   reboot, starts with an empty cache: the next Renovate run looks up every package again and takes longer once. To keep the cache
+>   through a restart, drop `save ""` there so that the master snapshots to its volume.
+> - `sf-k8s01-dev`, `sf-k8s02-dev`: the chart's default RDB snapshots stay on, so the pod restarts with its data.
 
 ## Git Authentication Workaround
 

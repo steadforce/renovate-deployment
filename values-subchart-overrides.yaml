@@ -20,7 +20,7 @@ renovate:
      memory: 512Mi
 
   renovate:
-    # hostRules: the Gitea hosts resolve to internal addresses, which Renovate will block by
+    # hostRules: the Gitea and Harbor hosts resolve to internal addresses, which Renovate will block by
     # default (internalHostAccess=block) in a future major release
     config: |
       {
@@ -32,6 +32,10 @@ renovate:
            },
            {
              "matchHost": "gitea.k8s01.steadforce.com",
+             "allowInternal": true
+           },
+           {
+             "matchHost": "harbor.k8s01.steadforce.com",
              "allowInternal": true
            }
          ],
@@ -126,10 +130,14 @@ renovate:
 valkey:
   replica:
     enabled: true
-    replicas: 3
-    persistence:
-      size: 100Mi
-      storageClass: nfs1
+    # Valkey pods including the master (chart 1.0: replica.replicas counts the master). Renovate's cache is disposable, so one pod is
+    # enough: a master alone (the chart allows 1; Sentinel would need 2). Both Services still work: renovate-valkey selects pod 0, renovate-valkey-read selects every pod.
+    replicas: 1
+  # one block for both modes; the PVC names (valkey-data-renovate-valkey-N) do not change
+  persistence:
+    enabled: true
+    size: 100Mi
+    storageClass: nfs1
   resources:
     limits:
       cpu: 300m
@@ -141,7 +149,7 @@ valkey:
     enabled: true
     serviceMonitor:
       enabled: true
-      extraLabels:
+      labels:
         prometheus: cluster-monitoring
     exporter:
       resources:
