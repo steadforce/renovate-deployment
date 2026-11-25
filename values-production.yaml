@@ -3,6 +3,9 @@ global:
 renovate:
   cronjob:
     activeDeadlineSeconds: 3060
+  env:
+    # repositories that this run does not scan (a negated pattern excludes, every other repository stays; owner/repo, case-insensitive)
+    RENOVATE_AUTODISCOVER_FILTER: '["!amprion/athena"]'
   resources:
     limits:
      cpu: 1500m
