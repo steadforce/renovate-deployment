@@ -4,3 +4,6 @@ renovate:
   cronjob:
     # faster feedback on dev; concurrencyPolicy Forbid skips a start while a run is still active
     schedule: '*/7 * * * *'
+  env:
+    # repositories that this run does not scan (a negated pattern excludes, every other repository stays; owner/repo, case-insensitive)
+    RENOVATE_AUTODISCOVER_FILTER: '["!steadforce-applications/buildx-build-push"]'

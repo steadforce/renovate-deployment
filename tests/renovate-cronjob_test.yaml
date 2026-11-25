@@ -234,3 +234,42 @@ tests:
 - it: mounts the renovate-gitconfig secret as the system gitconfig for production
   values: *productionValues
   asserts: *gitconfigMountAssert
+- it: excludes steadforce-applications/buildx-build-push from the development run and keeps the cache url
+  values: *developmentValues
+  asserts:
+  - contains:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env
+      content:
+        name: RENOVATE_AUTODISCOVER_FILTER
+        value: '["!steadforce-applications/buildx-build-push"]'
+  - contains:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env
+      content:
+        name: RENOVATE_REDIS_URL
+        value: redis://renovate-valkey
+- it: excludes amprion/athena and the organisation netz-noe from the production run and keeps the cache url
+  values: *productionValues
+  asserts:
+  - contains:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env
+      content:
+        name: RENOVATE_AUTODISCOVER_FILTER
+        value: '["!amprion/athena", "!netz-noe/*"]'
+  - contains:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env
+      content:
+        name: RENOVATE_REDIS_URL
+        value: redis://renovate-valkey
+- it: excludes nothing on local
+  values: *localValues
+  asserts:
+  - notContains:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env
+      content:
+        name: RENOVATE_AUTODISCOVER_FILTER
+        value: '["!amprion/athena", "!netz-noe/*"]'
+  - notContains:
+      path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "renovate")].env
+      content:
+        name: RENOVATE_AUTODISCOVER_FILTER
+        value: '["!steadforce-applications/buildx-build-push"]'
